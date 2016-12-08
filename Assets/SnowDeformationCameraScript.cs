@@ -82,6 +82,7 @@ public class SnowDeformationCameraScript : MonoBehaviour
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         material.SetTexture("_CurrentDepthTexture", currentSnowHeight);
+        material.SetFloat("_DeltaTime", Time.deltaTime);
         //called when depthCamera.targetTexture is set
         Graphics.Blit(source, destination, material);
 

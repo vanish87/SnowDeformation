@@ -56,6 +56,6 @@ public class SnowMeshRendering : MonoBehaviour {
     }
     void OnPostRender()
     {
-        Debug.Log("render Snow Mesh");
+        //Debug.Log("render Snow Mesh");
     }
 }

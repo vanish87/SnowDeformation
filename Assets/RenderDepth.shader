@@ -1,4 +1,9 @@
 Shader "Snow/RenderDepth" {
+
+	Properties
+	{
+		_RecoverSpeed("RecoverSpeed", Range(0, 0.5)) = 0.1
+	}
 	SubShader 
 	{
 		Tags{ "RenderType" = "Opaque" }
@@ -19,6 +24,9 @@ Shader "Snow/RenderDepth" {
 			sampler2D _CameraDepthTexture;
 			sampler2D _CurrentDepthTexture;
 
+			float _DeltaTime;
+			float _RecoverSpeed;
+
 			v2f vert( appdata_full v ) {
 				v2f o;
 				o.pos = UnityObjectToClipPos(v.vertex);
@@ -29,7 +37,16 @@ Shader "Snow/RenderDepth" {
 			float4 frag(v2f_img i) : SV_Target{
 				float depthValue = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv.xy);
 				float currentDepthValue = SAMPLE_DEPTH_TEXTURE(_CurrentDepthTexture, i.uv.xy);
-				depthValue = min(depthValue, currentDepthValue);
+
+				bool hasNewDepth = depthValue < currentDepthValue;
+				if (hasNewDepth)
+				{
+					depthValue = currentDepthValue>0 ? min(depthValue, currentDepthValue) : 1;
+				}
+				else
+				{
+					depthValue = currentDepthValue + _RecoverSpeed*_DeltaTime;
+				}
 				//do not linearize depth for orthographic camera
 				return float4(depthValue, 0, 0, 0);
 			}
