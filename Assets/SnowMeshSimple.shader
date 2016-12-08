@@ -104,7 +104,7 @@ Shader "Snow/SnowMeshSimple"
 					float4 light_color = float4(1.0f, 1.0f, 1.0f, 0.0f);
 					float3 light_position = float3(0, 1, 0);//view_pos
 
-					float3 light_dir = float3(1, 1, 1);
+					float3 light_dir = float3(-1, 1, 1);
 					// The vector from the surface to the light.
 					float3 pos_light;// = light_position - position;
 					pos_light = light_dir;
@@ -169,7 +169,7 @@ Shader "Snow/SnowMeshSimple"
 						//normalWorldSpace = SnowAccumulationNormal;
 					}
 
-					o.Delta.x = clamp(Delta / 25, 0, 0.3);
+					o.Delta.x = clamp(-Delta / 25, 0, 0.5);
 					//blend object normal and snow mesh normal
 					normalWorldSpace = normalize(SnowAccumulationNormal + normalWorldSpace);
 
@@ -190,7 +190,7 @@ Shader "Snow/SnowMeshSimple"
 						positionWorldSpace.y -= Delta* _DeformationSacle;
 					}
 
-					o.Delta.x = clamp(Delta / 25, 0, 0.3);
+					o.Delta.x = clamp(Delta / 25, -0.5, 0.5);
 					o.Delta.y = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
 				}
 
@@ -219,12 +219,12 @@ Shader "Snow/SnowMeshSimple"
 				//final.rgb = dot(i.normalVS, i.normalObject);
 
 				float3 specColor = float3(1, 1, 1);
-				final = CalLighting(i.normalVS, i.positionVS, textureCol, specColor, 100);
+				final = CalLighting(i.normalVS, i.positionVS, textureCol, specColor, 200);
 				//col.rgb = i.Delta.x/10;// i.Delta.y > 0.5 ? 0 : 1; //((i.Delta / 10) + 1) * 0.5;
 				//final.rgb = textureCol.xyz;
 				//final.rgb = i.normalWS;
 				//final.rgb = i.Delta.x;
-				final.rgb *= 1 - i.Delta.x;
+				final.rgb *= 1-i.Delta.x;
 				final.a = i.Delta.y * 2;
 				//final.rgb = difference;
 				return final;

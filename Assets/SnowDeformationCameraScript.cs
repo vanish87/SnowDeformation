@@ -29,9 +29,9 @@ public class SnowDeformationCameraScript : MonoBehaviour
         depthCamera.depthTextureMode = DepthTextureMode.Depth;
 
         //setup render texture
-        snowHeightTex = new RenderTexture(512, 512, 24, RenderTextureFormat.RInt, RenderTextureReadWrite.Linear);
+        snowHeightTex = new RenderTexture(1024, 1024, 24, RenderTextureFormat.RInt, RenderTextureReadWrite.Linear);
         snowHeightTex.name = "SnowDeformationHeightTex";
-        currentSnowHeight = new RenderTexture(512, 512, 24, RenderTextureFormat.RInt, RenderTextureReadWrite.Linear);
+        currentSnowHeight = new RenderTexture(1024, 1024, 24, RenderTextureFormat.RInt, RenderTextureReadWrite.Linear);
         currentSnowHeight.name = "CurrentSnowDeformationHeightTex";
         //OnRenderImage called when depthCamera.targetTexture is set
         //depthCamera.SetTargetBuffers(snowHeightTex.colorBuffer, snowHeightTex.depthBuffer);
