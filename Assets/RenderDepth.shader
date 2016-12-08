@@ -2,7 +2,7 @@ Shader "Snow/RenderDepth" {
 
 	Properties
 	{
-		_RecoverSpeed("RecoverSpeed", Range(0, 0.5)) = 0.1
+		_RecoverSpeed("RecoverSpeed", Range(0, 0.5)) = 0
 	}
 	SubShader 
 	{
@@ -39,13 +39,13 @@ Shader "Snow/RenderDepth" {
 				float currentDepthValue = SAMPLE_DEPTH_TEXTURE(_CurrentDepthTexture, i.uv.xy);
 
 				bool hasNewDepth = depthValue < currentDepthValue;
-				if (hasNewDepth)
+				//if (hasNewDepth)
 				{
 					depthValue = currentDepthValue>0 ? min(depthValue, currentDepthValue) : 1;
 				}
-				else
+				//else
 				{
-					depthValue = currentDepthValue + _RecoverSpeed*_DeltaTime;
+					//depthValue = currentDepthValue + _RecoverSpeed*_DeltaTime;
 				}
 				//do not linearize depth for orthographic camera
 				return float4(depthValue, 0, 0, 0);

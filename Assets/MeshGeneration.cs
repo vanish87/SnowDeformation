@@ -7,6 +7,7 @@ public class MeshGeneration : MonoBehaviour {
 
     public int xSize, ySize;
     public float NoiseScale = 10;
+    public float NoiseHeithtScale = 0.5f;
 
     private Vector3[] vertices = null;
     private Mesh mesh = null;
@@ -33,7 +34,7 @@ public class MeshGeneration : MonoBehaviour {
             for (int x = 0; x <= xSize; x++, i++)
             {
                 float heightNoise = Mathf.PerlinNoise((float)y/(xSize) * NoiseScale, (float)x/(ySize) * NoiseScale);
-                vertices[i] = new Vector3(x - (xSize/2), heightNoise, y - (ySize/2));
+                vertices[i] = new Vector3(x - (xSize/2), heightNoise * NoiseHeithtScale, y - (ySize/2));
                 uv[i] = new Vector2((float)x / xSize, (float)y / ySize);
                 tangents[i] = tangent;
             }

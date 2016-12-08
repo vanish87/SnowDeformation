@@ -32,7 +32,7 @@
 				float4 col;
 				float depthValue = abs(i.vertex.z);
 				col.a	= depthValue;
-				col.rgb = i.normalWS.xyz;
+				col.rgb = normalize(i.normalWS.xyz);
 				//col.rgb = depthValue;
 				return col;
 			}

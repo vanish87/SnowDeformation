@@ -7,7 +7,7 @@ Shader "Snow/SnowMeshSimple"
 		_Wetness("Wetness", Range(0, 0.5)) = 0.3
 
 		_SnowDirection("Snow Direction", Vector) = (0,1,0)
-		_SnowHeight("Snow Height", Range(0, 10)) = 3
+		_SnowHeight("Snow Height", Range(0, 10)) = 1
 		_Snow("Snow Level", Range(0,1)) = 0
 
 		_DeformationSacle("Deformation Sacle", Range(0, 10)) = 1
@@ -20,9 +20,10 @@ Shader "Snow/SnowMeshSimple"
 
 	SubShader
 	{
-		Tags{ "RenderType" = "Opaque" }
+		Tags{ "Queue" = "Transparent" "RenderType" = "Transparent" }
 		LOD 500
-
+		Blend SrcAlpha OneMinusSrcAlpha // use alpha blending
+		//ZWrite Off
 		Pass
 		{
 			Name "DefomationAndAccumulation"
@@ -48,8 +49,10 @@ Shader "Snow/SnowMeshSimple"
 			{
 				float4 vertex	: SV_POSITION;
 				float2 uv		: TEXCOORD0;
-				float4 positionWS: POSITION1;
-				float3 normalWS : NORMAL0;
+				float4 positionVS: POSITION1;
+				float3 normalVS : NORMAL0;
+				float3 normalWS : TEXCOORD2;
+				float3 normalObject : NORMAL1;
 				float2  Delta : TEXCOORD1;
 			};
 
@@ -84,6 +87,50 @@ Shader "Snow/SnowMeshSimple"
 				return heightUV;
 			}
 
+			float4 CalLighting(float3 normal,
+				float3 position, //view_pos
+				float4 diffuseAlbedo,
+				float3 specularAlbedo,
+				float specularPower)
+			{
+				float3 pos_eye = normalize(-position);
+
+				// Start with a sum of zero. 
+				float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
+				float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+				{
+					float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+					float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+					float4 light_color = float4(1.0f, 1.0f, 1.0f, 0.0f);
+					float3 light_position = float3(0, 1, 0);//view_pos
+
+					float3 light_dir = float3(1, 1, 1);
+					// The vector from the surface to the light.
+					float3 pos_light;// = light_position - position;
+					pos_light = light_dir;
+					pos_light = normalize(pos_light);
+
+					float diffuse_angle = dot(pos_light, normal);//N * Lc
+					[flatten]
+					if (diffuse_angle > 0.0f)
+					{
+						float3 refect_vec = reflect(-pos_light, normal);
+
+						float spec_factor = pow(max(dot(refect_vec, pos_eye), 0.0f), specularPower);
+
+						//Cdiff * Clight * (N * Lc)
+						diffuse = diffuseAlbedo * light_color * diffuse_angle;
+						//diffuse = light_color * diffuse_angle;
+						//pow(R*V, alpha) * Cspec * Clight * (N * Lc)
+						spec = spec_factor * float4(specularAlbedo, 1.0f) * light_color * diffuse_angle;
+					}
+
+					float4 acc_color = (ambient + diffuse + spec);
+					litColor = litColor + acc_color;
+				}
+				return litColor;
+			}
+
 			v2f vert(appdata v)
 			{
 				v2f o;
@@ -110,54 +157,79 @@ Shader "Snow/SnowMeshSimple"
 				//caculate snow height delta
 				if (IsSnowCovered)
 				{
-					if (dot(SnowAccumulationNormal, _SnowDirection) >  0.86/*cos(30)*/)
+					Delta = max(SnowMeshHeight - SnowAccumulationHeight, 0);
+					if (dot(SnowAccumulationNormal, _SnowDirection) >  0.5/*cos(30)*/)
 					{
-						Delta = max(SnowMeshHeight - SnowAccumulationHeight, 0);
 						positionWorldSpace.y += Delta* _SnowHeight;
 						positionWorldSpace.xyz += SnowAccumulationNormal.xyz * float3(0.5, 1, 0.5) * _SnowDirection;
-						normalWorldSpace = SnowAccumulationNormal;
-						o.Delta.x = Delta;
+						//normalWorldSpace = SnowAccumulationNormal;
 					}
-					else
+					//else
 					{
 						//normalWorldSpace = SnowAccumulationNormal;
 					}
-					o.Delta.y = dot(SnowAccumulationNormal, _SnowDirection);
+
+					o.Delta.x = clamp(Delta / 25, 0, 0.3);
+					//blend object normal and snow mesh normal
+					normalWorldSpace = normalize(SnowAccumulationNormal + normalWorldSpace);
+
+					//defines alpha chanel
+					o.Delta.y = (dot(SnowAccumulationNormal, _SnowDirection.xyz) + 1) * 0.5;
+
+					//debug
+					o.normalObject = SnowAccumulationNormal;
+
+
 				}
 				else
 				{
+					Delta = max(SnowMeshHeight - SnowDeformationHeight, 0);
 					if (SnowDeformationHeight > 0 && SnowDeformationHeight < _SnowCameraZScale)
 					{
 						//To modify vertex and add snow deformation to this object
-						Delta = max(SnowMeshHeight - SnowDeformationHeight, 0);
 						positionWorldSpace.y -= Delta* _DeformationSacle;
-						o.Delta.xy = -Delta;
 					}
+
+					o.Delta.x = clamp(Delta / 25, 0, 0.3);
+					o.Delta.y = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
 				}
 
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				o.normalWS = normalWorldSpace;
-				o.positionWS = positionWorldSpace;
+				o.normalVS = mul(UNITY_MATRIX_V, normalWorldSpace);
+				o.normalWS = SnowAccumulationNormal;
+				o.positionVS = mul(UNITY_MATRIX_V, positionWorldSpace);
 				return o;
 			}
 
 			fixed4 frag(v2f i) : SV_Target
 			{
+				fixed4 final;
 				// sample the texture
-				fixed4 col = fixed4(1,0,0,1);// tex2D(_MainTex, float2(i.uv.x, i.uv.y));
+				fixed4 textureCol = tex2D(_MainTex, i.uv.xy);
 				//col = tex2D(_SnowAccumulationMap, float2(i.uv.x, i.uv.y)).rgba;
-				float4 positionSnowCamera = mul(_SnowCameraMatrix, i.positionWS);
+				//float4 positionSnowCamera = mul(_SnowCameraMatrix, i.positionWS);
 				//i.Normal = UnpackNormal(tex2D(_Bump, IN.uv_Bump));
-				half difference = dot(i.normalWS, _SnowDirection.xyz) - lerp(1,-1, _Snow);
-				difference = saturate(difference / _Wetness);
-				col.rgb = difference*_SnowColor.rgb + (1 - difference) *col;
-				col.rgb = i.normalWS;
-				//col.rgb = i.Delta.y;// i.Delta.y > 0.5 ? 0 : 1; //((i.Delta / 10) + 1) * 0.5;
-				col.a = col.a;
-				//col.a = i.Delta.y > 1 ? 0:1;
-				return col;
+				float Alpha = dot(i.normalVS, _SnowDirection.xyz);
+				float difference = dot(i.normalWS, _SnowDirection.xyz);
+				//difference = saturate(difference / _Wetness);
+				final.rgb = difference*_SnowColor.rgb + (1 - difference) *textureCol.rgb;
+				//final.rgb = i.normalVS;
+				//final.rgb = i.normalObject;
+				//final.rgb = dot(i.normalVS, i.normalObject);
+
+				float3 specColor = float3(1, 1, 1);
+				final = CalLighting(i.normalVS, i.positionVS, textureCol, specColor, 100);
+				//col.rgb = i.Delta.x/10;// i.Delta.y > 0.5 ? 0 : 1; //((i.Delta / 10) + 1) * 0.5;
+				//final.rgb = textureCol.xyz;
+				//final.rgb = i.normalWS;
+				//final.rgb = i.Delta.x;
+				final.rgb *= 1 - i.Delta.x;
+				final.a = i.Delta.y * 2;
+				//final.rgb = difference;
+				return final;
 			}
+			
 			ENDCG
 		}
 
