@@ -22,7 +22,7 @@ public class SnowAccumulationCameraScript : MonoBehaviour
         accDepthCamera.depthTextureMode = DepthTextureMode.Depth;
 
         //setup render texture
-        snowNormalsAndHeightTex = new RenderTexture(512, 512, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+        snowNormalsAndHeightTex = new RenderTexture(1024, 1024, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
         snowNormalsAndHeightTex.name = "SnowNormalsAndHeightTex";
         //accDepthCamera.SetTargetBuffers(snowNormalsAndHeightTex.colorBuffer, snowNormalsAndHeightTex.depthBuffer);
         accDepthCamera.targetTexture = snowNormalsAndHeightTex;
