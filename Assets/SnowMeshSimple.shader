@@ -158,10 +158,10 @@ Shader "Snow/SnowMeshSimple"
 				if (IsSnowCovered)
 				{
 					Delta = max(SnowMeshHeight - SnowAccumulationHeight, 0);
-					if (dot(SnowAccumulationNormal, _SnowDirection) >  0.5/*cos(30)*/)
+					if (dot(SnowAccumulationNormal, _SnowDirection) >  0.4/*cos(30)*/)
 					{
 						positionWorldSpace.y += Delta* _SnowHeight;
-						positionWorldSpace.xyz += SnowAccumulationNormal.xyz * float3(0.5, 1, 0.5) * _SnowDirection;
+						positionWorldSpace.xyz += SnowAccumulationNormal.xyz * float3(1.5, 1, 1.5) * _SnowDirection;
 						//normalWorldSpace = SnowAccumulationNormal;
 					}
 					//else
