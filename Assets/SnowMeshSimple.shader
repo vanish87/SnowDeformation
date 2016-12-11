@@ -153,11 +153,11 @@ Shader "Snow/SnowMeshSimple"
 						//pow(R*V, alpha) * Cspec * Clight * (N * Lc)
 						spec = spec_factor * float4(specularAlbedo, 1.0f) * light_color * diffuse_angle;
 
-						float4 spectColor = CalFresnal(spec, float4(0,0,0,0), position, normal);
-						spec = spectColor;
+						//float4 spectColor = CalFresnal(spec, float4(1,0,0,1), position, normal);
+						//spec = spectColor;
 					}
 
-					float4 acc_color = (ambient + diffuse + spec);
+					float4 acc_color = (ambient + diffuse + spec) * 1.3;
 					litColor = litColor + acc_color;
 				}
 				return litColor;
@@ -197,7 +197,7 @@ Shader "Snow/SnowMeshSimple"
 						positionWorldSpace.xyz += SnowAccumulationNormal.xyz * _AccumulationSacle.xyz * _SnowDirection;
 					}
 
-					o.Delta.x = clamp(Delta / (_SnowCameraZScale * 0.5), 0, 0.5);
+					//o.Delta.x = clamp(Delta / (_SnowCameraZScale * 0.5), 0, 0.5);
 					//blend object normal and snow mesh normal
 					normalWorldSpace = normalize(SnowAccumulationNormal + normalWorldSpace);
 
@@ -267,7 +267,7 @@ Shader "Snow/SnowMeshSimple"
 				float ColorScale = 1;
 				ColorScale += i.Delta.x;
 				final.rgb *= ColorScale;
-				final.a = i.Delta.z;
+				final.a = i.Delta.z * 3;
 				//final.rgb = difference;
 				return final;
 			}
