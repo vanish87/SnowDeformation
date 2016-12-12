@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 1889e31829a671942a4133045b1cd2c0
+timeCreated: 1480429886
+licenseType: Free
+ShaderImporter:
+  defaultTextures:
+  - _LightTexture0: {instanceID: 0}
+  - _SnowHeightMap: {fileID: 8400000, guid: 125ac1bc6b2ab6f43b3ecf70e2db470e, type: 2}
+  - _LightTextureB0: {instanceID: 0}
+  - _ShadowMapTexture: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

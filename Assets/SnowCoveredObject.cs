@@ -20,6 +20,10 @@ public class SnowCoveredObject : MonoBehaviour {
         {
             renderHeightMapShader = Shader.Find("Snow/RenderNormalAndDepth");
         }
+        if (normalObjectShader == null)
+        {
+            normalObjectShader = Shader.Find("Snow/SnowObject");
+        }
         renderHeightMapMat = new Material(renderHeightMapShader);
         normalObjectMat = new Material(normalObjectShader);
     }

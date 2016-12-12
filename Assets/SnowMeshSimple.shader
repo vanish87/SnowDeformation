@@ -40,6 +40,7 @@ Shader "Snow/SnowMeshSimple"
 			
 
 			#include "UnityCG.cginc"
+			#include "lighting.cginc"
 
 			struct appdata
 			{
@@ -114,54 +115,7 @@ Shader "Snow/SnowMeshSimple"
 				return FinalColor;
 			}
 
-			float4 CalLighting(float3 normal,
-				float3 position, //world pos
-				float4 diffuseAlbedo,
-				float3 specularAlbedo,
-				float specularPower)
-			{
-				float3 pos_eye = normalize(_WorldSpaceCameraPos - position);
-
-				// Start with a sum of zero. 
-				float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
-				float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-				{
-					float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
-					float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
-					float4 light_color = float4(1.0f, 1.0f, 1.0f, 0.0f);
-					float3 light_position = float3(0, 1, 0);//view_pos
-
-					float3 light_dir = float3(-1, 1, 1);
-					// The vector from the surface to the light.
-					float3 pos_light;// = light_position - position;
-					pos_light = light_dir;
-					pos_light = normalize(pos_light);
-
-					normal = normalize(normal);
-
-					float diffuse_angle = dot(pos_light, normal);//N * Lc
-					[flatten]
-					if (diffuse_angle > 0.0f)
-					{
-						float3 refect_vec = reflect(-pos_light, normal);
-
-						float spec_factor = pow(max(dot(refect_vec, pos_eye), 0.0f), specularPower);
-
-						//Cdiff * Clight * (N * Lc)
-						diffuse = diffuseAlbedo * light_color * diffuse_angle;
-						//diffuse = light_color * diffuse_angle;
-						//pow(R*V, alpha) * Cspec * Clight * (N * Lc)
-						spec = spec_factor * float4(specularAlbedo, 1.0f) * light_color * diffuse_angle;
-
-						//float4 spectColor = CalFresnal(spec, float4(1,0,0,1), position, normal);
-						//spec = spectColor;
-					}
-
-					float4 acc_color = (ambient + diffuse + spec) * 1.3;
-					litColor = litColor + acc_color;
-				}
-				return litColor;
-			}
+					
 
 			v2f vert(appdata v)
 			{
@@ -189,7 +143,7 @@ Shader "Snow/SnowMeshSimple"
 				//caculate snow height delta
 				if (IsSnowCovered)
 				{
-					Delta = max(SnowMeshHeight - SnowAccumulationHeight, 0);
+					Delta = min(max(SnowMeshHeight - SnowAccumulationHeight, 0), 2);
 					float SnowDifference = dot(SnowAccumulationNormal, _SnowDirection);
 					if (SnowDifference>  _SticknessCos)
 					{
@@ -197,7 +151,7 @@ Shader "Snow/SnowMeshSimple"
 						positionWorldSpace.xyz += SnowAccumulationNormal.xyz * _AccumulationSacle.xyz * _SnowDirection;
 					}
 
-					//o.Delta.x = clamp(Delta / (_SnowCameraZScale * 0.5), 0, 0.5);
+					o.Delta.x = clamp(Delta / (_SnowCameraZScale * 0.5), 0, 0.5);
 					//blend object normal and snow mesh normal
 					normalWorldSpace = normalize(SnowAccumulationNormal + normalWorldSpace);
 
