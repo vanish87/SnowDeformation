@@ -35,10 +35,14 @@ Shader "Snow/DeformationPostProcess" {
 				return o;
 			}
 
-			float getElevation(float currentSnowHeight, float currentObjectHeight,)
+			float getElevation(float currentSnowHeight, float currentObjectHeight, float deformationHeight )
 			{
-
+				float depressinDis = sqrt(currentSnowHeight - currentObjectHeight);
+				float distanceFromFoot = sqrt(deformationHeight - currentObjectHeight);
+				float elevationDistance = distanceFromFoot - depressinDis;
+				return elevationDistance;
 			}
+
 
 			//this post process do two things:
 			//1. calculate new deformation if it has a deeper depths; fill snow deformation when it is nessceary.
@@ -46,6 +50,18 @@ Shader "Snow/DeformationPostProcess" {
 			float4 frag(v2f i) : SV_Target{
 				float2 newInfo = tex2D(_NewDepthTex, i.uv.xy).rg;
 				float2 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rg;
+
+				float elevationDistance = getElevation(0.5, newInfo.y, newInfo.x);
+
+				float ratio = clamp(elevationDistance / 3.5, 0, 1);
+				float height = max(elevationDistance, 0.3);
+
+				float elevation = ((pow((0.5 - (2 * ratio)), 2) + 1) * height);
+				//float2 target = sampleToOffset(_NewDepthTex, i.uv, 10);
+				//if (target.r > 0 && target.r < 1)
+				//{
+				//	return float4(1, 0, 0, 0);
+				//}
 
 				//depthValue = objectHeight;
 				bool hasNewDepth = newInfo.x < currentInfo.x;
@@ -59,7 +75,7 @@ Shader "Snow/DeformationPostProcess" {
 				}
 				float2 ret = hasNewDepth ? newInfo : currentInfo;
 				//do not linearize depth for orthographic camera
-				return float4(ret, 0, 0);
+				return float4(ret, elevation, 0);
 			}
 			ENDCG
 		}	

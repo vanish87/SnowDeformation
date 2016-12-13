@@ -120,6 +120,7 @@ Shader "Snow/SnowMeshSimple"
 				//Extract info from 2 height map texture
 				float  SnowDeformationHeight = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0)).r * _SnowCameraZScale;
 				float  SnowObjectHeight = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0)).g;
+				float  SnowElevationHeight = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0)).b;
 				float4 SnowAccumulationInfo  = tex2Dlod(_SnowAccumulationMap, float4(accuHeightUV.xy, 0, 0));
 
 				float SnowAccumulationHeight  = SnowAccumulationInfo.a * _SnowCameraZScale;
@@ -164,7 +165,9 @@ Shader "Snow/SnowMeshSimple"
 					o.Delta.x = clamp(-Delta / (_SnowCameraZScale * 0.5), -0.5, 0);
 					o.Delta.z = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
 				}
-				positionWorldSpace.y = SnowObjectHeight + 6;
+				//positionWorldSpace.y = SnowElevationHeight >0?(1-SnowElevationHeight) * 50 : positionWorldSpace.y;
+
+
 				o.Delta.y = SnowAccumulationInfo.a;
 
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);

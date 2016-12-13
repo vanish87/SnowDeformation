@@ -14,6 +14,9 @@ public class DynamicObject : MonoBehaviour
     private Renderer rend;
     private Material renderHeightMapMat;
     private Material normalObjectMat;
+
+    [Range(0, 0.005F)]
+    public float _DeformationScale = 0.003f;
     // Use this for initialization
     void Start()
     {
@@ -40,7 +43,9 @@ public class DynamicObject : MonoBehaviour
         if (Camera.current == snowDeformationCamera)
         {
             renderHeightMapMat.SetMatrix("_SnowCameraMatrix", snowDeformationCamera.worldToCameraMatrix);
-            renderHeightMapMat.SetFloat("_ObjectMinHeight", rend.bounds.min.y);
+            renderHeightMapMat.SetFloat("_ObjectMinHeight", (25 + rend.bounds.min.y) / 50 );
+            renderHeightMapMat.SetFloat("_DeformationScale", _DeformationScale);
+            renderHeightMapMat.SetVector("_ObjectCenter", rend.bounds.center);
             //set render depth material
             rend.material = renderHeightMapMat;
             //Debug.Log(snowDeformationCamera.worldToCameraMatrix);
