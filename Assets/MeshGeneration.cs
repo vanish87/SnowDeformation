@@ -16,7 +16,7 @@ public class MeshGeneration : MonoBehaviour {
     private RenderTexture MeshHeightMap;
     // Use this for initialization
 
-    SnowMeshClass newmesh;
+    SnowMesh newmesh;
     void Start()
     {
         Generate();
@@ -109,7 +109,7 @@ public class MeshGeneration : MonoBehaviour {
     float GetHeightValue(int x, int y)
     {
         int PixelX = (int)(x * 1.0 / xSize * MeshHeightMap.width);
-        int PixelY = (int)(y * 1.0 / ySize * MeshHeightMap.width);
+        int PixelY = (int)(y * 1.0 / ySize * MeshHeightMap.height);
         return MeshHeightMapCPU.GetPixel(PixelX, PixelY).a;
     }
 
@@ -177,46 +177,24 @@ public class MeshGeneration : MonoBehaviour {
             }
         }
     }
-
+    SnowMesh NewMesh;
     public void CreateNewMesh()
     {
-        GetComponent<MeshFilter>().mesh = mesh = new Mesh();
-        SnowMeshClass NewMesh = new SnowMeshClass();
-        NewMesh.Create(xSize, ySize);
-
-        FillHeightGrid();
+        NewMesh = new SnowMesh();        
 
         for (int i = 0, y = 0; y <= ySize; y++)
         {
             for (int x = 0; x <= xSize; x++, i++)
             {
                 float heightNoise = Mathf.PerlinNoise((float)y / (xSize) * NoiseScale, (float)x / (ySize) * NoiseScale);
-
-                if(x < xSize && y < ySize) heightNoise = HeighGrid[x,y]==-1?0:(HeighGrid[x, y]-100) * 2;
-                //heightNoise = Random.Range(0, 20) /20;
-                NewMesh.Vextex[i] = new Vector3(x - (xSize / 2), heightNoise, y - (ySize / 2));
-                NewMesh.UV[i] = new Vector2((float)x / xSize, (float)y / ySize);
-                //tangents[i] = tangent;
+                //NewMesh.Triangle[i] = xSize * y + x;
+                NewMesh.AddVertex(new Vector3(x - (xSize / 2), heightNoise * NoiseHeithtScale, y - (ySize / 2)));
             }
         }
 
-        for (int ti = 0, vi = 0, y = 0; y < ySize; y++, vi++)
-        {
-            for (int x = 0; x < xSize; x++, ti += 6, vi++)
-            {
-                NewMesh.Triangle[ti] = vi;
-                NewMesh.Triangle[ti + 3] = NewMesh.Triangle[ti + 2] = vi + 1;
-                NewMesh.Triangle[ti + 4] = NewMesh.Triangle[ti + 1] = vi + xSize + 1;
-                NewMesh.Triangle[ti + 5] = vi + xSize + 2;
-            }
-        }
-
-        mesh.vertices = NewMesh.Vextex;
-        mesh.uv = NewMesh.UV;
-        //mesh.tangents = tangents;
-        mesh.triangles = NewMesh.Triangle;
-        mesh.RecalculateBounds();
-        mesh.RecalculateNormals();
+        NewMesh.GenerateNewMesh();
+        GetComponent<MeshFilter>().mesh = mesh = NewMesh.Mesh;
+        
     }
     // Update is called once per frame
     void Update () {

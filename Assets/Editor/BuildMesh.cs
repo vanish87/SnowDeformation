@@ -11,8 +11,8 @@ public class BuildMesh : Editor {
         MeshGeneration myScript = (MeshGeneration)target;
         if (GUILayout.Button("Build Object"))
         {
-            //myScript.CreateNewMesh();
-            myScript.Generate();
+            myScript.CreateNewMesh();
+            //myScript.Generate();
         }
     }
 }

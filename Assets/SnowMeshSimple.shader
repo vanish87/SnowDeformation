@@ -59,6 +59,7 @@ Shader "Snow/SnowMeshSimple"
 				float3 normalWS		: TEXCOORD2;
 				float3 tangentWS	: TEXCOORD3;
 				float3 binormalWS	: TEXCOORD4;
+				float2 heightMapUV	: TEXCOORD6;
 				
 				float3 normalObject : NORMAL1;
 				float3 Delta		: TEXCOORD1;//x is accumulation height delta/deformation height delta; z is alpha difference
@@ -153,7 +154,7 @@ Shader "Snow/SnowMeshSimple"
 
 					o.Delta.x = clamp(Delta / (_SnowCameraZScale * 0.5), 0, 0.5);
 					//blend object normal and snow mesh normal
-					normalWorldSpace = normalize(SnowAccumulationNormal + normalWorldSpace);
+					normalWorldSpace = SnowAccumulationNormal;// normalize(SnowAccumulationNormal + normalWorldSpace);
 
 					//defines alpha chanel
 					o.Delta.z = (SnowDifference + 1) * 0.5;
@@ -174,10 +175,13 @@ Shader "Snow/SnowMeshSimple"
 					o.Delta.z = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
 				}
 				
+				o.Delta.y = SnowAccumulationInfo.a;
+
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				o.positionWS = positionWorldSpace;
 				o.normalWS	 = normalWorldSpace;
+				o.heightMapUV = accuHeightUV.xy;
 				//o.normalVS = mul(UNITY_MATRIX_V, normalWorldSpace);
 				//o.positionVS = mul(UNITY_MATRIX_V, positionWorldSpace);
 
@@ -221,8 +225,29 @@ Shader "Snow/SnowMeshSimple"
 				float ColorScale = 1;
 				ColorScale += i.Delta.x;
 				final.rgb *= ColorScale;
-				final.a = i.Delta.z * 3;
-				//final.rgb = difference;
+				//final.a = i.Delta.z * 3;
+				//final.rgb = i.Delta.y;
+				//final.a = (1 - i.normalWS.y)>0.1 ? 1 : 0;
+
+
+				float Heightmap = tex2D(_SnowAccumulationMap, float2(i.heightMapUV.x, i.heightMapUV.y)).a;
+				float HeightmapXPlus  = (tex2D(_SnowAccumulationMap, float2(i.heightMapUV.x + (1.0f / 512), i.heightMapUV.y)).a* 0.5)
+										+ (tex2D(_SnowAccumulationMap, float2(i.heightMapUV.x + (2.0f / 512), i.heightMapUV.y)).a *0.5);
+				float HeightmapXMinus = (tex2D(_SnowAccumulationMap, float2(i.heightMapUV.x - (1.0f / 512), i.heightMapUV.y)).a* 0.5)
+										+ (tex2D(_SnowAccumulationMap, float2(i.heightMapUV.x - (2.0f / 512), i.heightMapUV.y)).a*0.5);
+
+				float HeightmapYPlus = (tex2D(_SnowAccumulationMap, float2(i.heightMapUV.x, i.heightMapUV.y + (1.0f / 512))).a*0.5)
+										+ (tex2D(_SnowAccumulationMap, float2(i.heightMapUV.x, i.heightMapUV.y + (2.0f / 512))).a*0.5);
+				float HeightmapYMinus = (tex2D(_SnowAccumulationMap, float2(i.heightMapUV.x, i.heightMapUV.y - (1.0f / 512))).a*0.5)
+										+ (tex2D(_SnowAccumulationMap, float2(i.heightMapUV.x, i.heightMapUV.y - (2.0f / 512))).a*0.5);
+
+				if (abs(HeightmapXPlus - Heightmap) > 0.01 || abs(HeightmapXMinus - Heightmap) >0.01 ||
+					abs(HeightmapYPlus - Heightmap) > 0.01 || abs(HeightmapYMinus - Heightmap) >0.01)
+				{
+					final.a = 0;
+				}
+
+
 				return final;
 			}
 			
