@@ -98,7 +98,7 @@
 				//float depthValue = abs(i.vertex.z);
 				//col.a	= depthValue;
 				//col.rgb = normalize(i.normalWS.xyz);
-				col.rgb = normalWS;
+				//col.rgb = normalWS;
 				return col;
 			}
 			ENDCG
