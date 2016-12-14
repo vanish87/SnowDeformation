@@ -21,12 +21,12 @@ Shader "Snow/RenderDepthAndObjectHeight" {
 			float _DeformationScale;
 
 			float4x4 localScale;
+			float Scale = 1.5;
 
 			v2f vert( appdata_full v ) {
 				v2f o;
-				float Scale = 1.5;
 				float4 x = float4(Scale, 0, 0, 0);
-				float4 y = float4(0, Scale, 0, 0);
+				float4 y = float4(0, 1, 0, 0);
 				float4 z = float4(0, 0, Scale, 0);
 				float4 w = float4(0, 0, 0, 1);
 
@@ -39,12 +39,13 @@ Shader "Snow/RenderDepthAndObjectHeight" {
 
 				
 				o.pos = UnityObjectToClipPos(v.vertex);
+				//_ObjectMinHeight is in camera space
 				o.heightAndDis = float2(_ObjectMinHeight, dis);
 				return o;
 			}
 
 			float4 frag(v2f i) : SV_Target{
-				float depthValue = i.pos.z + ((i.heightAndDis.y * i.heightAndDis.y) * _DeformationScale);
+				float depthValue = i.heightAndDis.x + ((i.heightAndDis.y * i.heightAndDis.y) * _DeformationScale);
 				float objectHeight = i.heightAndDis.x;
 
 
