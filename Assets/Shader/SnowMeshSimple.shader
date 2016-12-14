@@ -194,8 +194,8 @@ Shader "Snow/SnowMeshSimple"
 				float3 T = normalize(i.tangentWS);
 				float3 B = cross(N, T);
 				float3x3 TtoW = float3x3(T, B, N);
-				float3 normalTS = (tex2D(_NormalMapTex, i.uv.xy).rgb * 2) -1;
-				float3 normalWS = mul(normalTS, TtoW);
+				float4 normalTS = tex2D(_NormalMapTex, i.uv);
+				float3 normalWS = mul(normalize(UnpackNormal(normalMap)), TtoW);
 				normalWS = i.normalWS;
 
 				//col = tex2D(_SnowAccumulationMap, float2(i.uv.x, i.uv.y)).rgba;
