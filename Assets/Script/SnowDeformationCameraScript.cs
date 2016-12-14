@@ -22,8 +22,8 @@ public class SnowDeformationCameraScript : MonoBehaviour
     private RenderBuffer[] mrtRB = new RenderBuffer[2];
 
 
-    [Range(0, 1.5F)]
-    public float artistScale;
+    [Range(0, 50F)]
+    public float artistScale = 1.0F;
 
     // Use this for initialization
     void Start()

@@ -165,7 +165,8 @@ Shader "Snow/SnowMeshSimple"
 					o.Delta.x = clamp(-Delta / (_SnowCameraZScale * 0.5), -0.5, 0);
 					o.Delta.z = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
 				}
-				positionWorldSpace.y += SnowElevationHeight;
+				if (SnowElevationHeight > 0)
+					positionWorldSpace.y += SnowElevationHeight * 100;
 
 
 				o.Delta.y = SnowAccumulationInfo.a;
@@ -195,7 +196,7 @@ Shader "Snow/SnowMeshSimple"
 				float3 B = cross(N, T);
 				float3x3 TtoW = float3x3(T, B, N);
 				float4 normalTS = tex2D(_NormalMapTex, i.uv);
-				float3 normalWS = mul(normalize(UnpackNormal(normalMap)), TtoW);
+				float3 normalWS = mul(normalize(UnpackNormal(normalTS)), TtoW);
 				normalWS = i.normalWS;
 
 				//col = tex2D(_SnowAccumulationMap, float2(i.uv.x, i.uv.y)).rgba;

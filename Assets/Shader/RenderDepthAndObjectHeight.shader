@@ -26,8 +26,8 @@ Shader "Snow/RenderDepthAndObjectHeight" {
 				v2f o;
 				float Scale = 1.5;
 				float4 x = float4(Scale, 0, 0, 0);
-				float4 y = float4(0, Scale, 0, 0);
-				float4 z = float4(0, 0, 1, 0);
+				float4 y = float4(0, 1, 0, 0);
+				float4 z = float4(0, 0, Scale, 0);
 				float4 w = float4(0, 0, 0, 1);
 
 				localScale = float4x4(x, y, z, w);
@@ -44,7 +44,8 @@ Shader "Snow/RenderDepthAndObjectHeight" {
 			}
 
 			float4 frag(v2f i) : SV_Target{
-				float depthValue = i.pos.z + ((i.heightAndDis.y * i.heightAndDis.y) * _DeformationScale);
+				float depthValue = i.heightAndDis.x + ((i.heightAndDis.y * i.heightAndDis.y) * _DeformationScale);
+				//depthValue = i.pos.z;
 				float objectHeight = i.heightAndDis.x;
 
 

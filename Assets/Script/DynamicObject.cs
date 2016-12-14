@@ -15,7 +15,7 @@ public class DynamicObject : MonoBehaviour
     private Material renderHeightMapMat;
     private Material normalObjectMat;
 
-    [Range(0, 0.005F)]
+    [Range(0.001F, 0.01F)]
     public float _DeformationScale = 0.003f;
     // Use this for initialization
     void Start()
