@@ -80,13 +80,11 @@ Shader "Snow/DeformationPostProcess" {
 				{
 					elevation = 0;
 				}
-				else
+				else if (currentInfo.z < 1)
 				{
-					if (currentInfo.z < 1)
-					{
-						elevation = max(elevation, currentInfo.z);
-					}
+					elevation = max(elevation, currentInfo.z);
 				}
+				
 				//if (hasNewDepth)
 				{
 
