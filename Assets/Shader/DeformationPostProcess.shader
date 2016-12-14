@@ -27,6 +27,7 @@ Shader "Snow/DeformationPostProcess" {
 			float _DeltaTime;
 			float _RecoverSpeed;
 			float _ObjectMinHeight;
+			float _ArtistScale;
 
 			v2f vert(appdata_full v) {
 				v2f o;
@@ -48,15 +49,21 @@ Shader "Snow/DeformationPostProcess" {
 			//1. calculate new deformation if it has a deeper depths; fill snow deformation when it is nessceary.
 			//2. calculate elevation by sampling narbor pixels, then write elevation value for mesh rendering.
 			float4 frag(v2f i) : SV_Target{
-				float2 newInfo = tex2D(_NewDepthTex, i.uv.xy).rg;
-				float2 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rg;
+				float3 newInfo = tex2D(_NewDepthTex, i.uv.xy).rgb;
+				float3 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgb;
 
-				float elevationDistance = getElevation(0.5, newInfo.y, newInfo.x);
+				//grater than 0 => elevation
+				//less than 0 => deformation
+				//snow height = 0.5
+				float snowHeight = 0.5;
+				float elevationDistance = getElevation(snowHeight, newInfo.y, newInfo.x);
 
-				float ratio = elevationDistance / 1;
-				float height = 0.05;// max(elevationDistance, 0.3);
+				float maxElevationDistance = snowHeight - newInfo.y;
+				float ratio = elevationDistance / (maxElevationDistance > 0? maxElevationDistance:1);//scale * 2
+				float height = maxElevationDistance * _ArtistScale;// 0.05;// max(elevationDistance, 0.3);
 
-				float elevation = ((pow((0.5 - (2 * ratio)), 2) + 1) * height);
+				//float elevation = ((-pow((0.5 - (2 * ratio)), 2) + 1) * height);
+				float elevation = (-2 * pow((ratio - 0.7), 2) + 1 ) * height;
 				//float2 target = sampleToOffset(_NewDepthTex, i.uv, 10);
 				//if (target.r > 0 && target.r < 1)
 				//{
@@ -65,6 +72,7 @@ Shader "Snow/DeformationPostProcess" {
 
 				//depthValue = objectHeight;
 				bool hasNewDepth = newInfo.x < currentInfo.x;
+				bool hasNewElevation = currentInfo.z < 1? newInfo.z > currentInfo.z:newInfo.z < currentInfo.z;
 				//if (hasNewDepth)
 				{
 
@@ -74,8 +82,9 @@ Shader "Snow/DeformationPostProcess" {
 					//depthValue = currentDepthValue + _RecoverSpeed*_DeltaTime;
 				}
 				float2 ret = hasNewDepth ? newInfo : currentInfo;
+				elevation = hasNewElevation ? newInfo.z : currentInfo.z;
 				//do not linearize depth for orthographic camera
-				return float4(ret, elevation, 0);
+				return float4(ret, clamp(elevation, 0, 1), 0);
 			}
 			ENDCG
 		}	

@@ -21,6 +21,10 @@ public class SnowDeformationCameraScript : MonoBehaviour
     public RenderTexture[] mrtTex = new RenderTexture[2];
     private RenderBuffer[] mrtRB = new RenderBuffer[2];
 
+
+    [Range(0, 1.5F)]
+    public float artistScale;
+
     // Use this for initialization
     void Start()
     {
@@ -89,6 +93,7 @@ public class SnowDeformationCameraScript : MonoBehaviour
         material.SetTexture("_CurrentDepthTexture", currentSnowHeight);
         material.SetTexture("_NewDepthTex", source);
         material.SetFloat("_DeltaTime", Time.deltaTime);
+        material.SetFloat("_ArtistScale", artistScale);
         //called when depthCamera.targetTexture is set
         Graphics.Blit(source, destination, material, 0);
 

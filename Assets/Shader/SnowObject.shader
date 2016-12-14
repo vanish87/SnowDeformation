@@ -3,6 +3,7 @@
 	Properties
 	{
 		_MainTex("Albedo", 2D) = "white" {}
+		_SnowShadeMapTex("Snow Shade Map", 2D) = "white" {}
 		_SnowNormalMapTex("Snow Normal Map", 2D) = "white" {}
 		_SnowSpecularMapTex("Snow Specular Map", 2D) = "white" {}
 
@@ -43,6 +44,7 @@
 	
 			sampler2D _MainTex;
 			sampler2D _NormalMapTex;
+			sampler2D _SnowShadeMapTex;
 			sampler2D _SnowNormalMapTex;
 			sampler2D _SnowSpecularMapTex;
 
@@ -94,10 +96,12 @@
 				col = tex2D(_MainTex, i.uv.xy);
 
 				float3 specColor = float3(1, 1, 1);
+				float4 snowShadeColor = tex2D(_SnowShadeMapTex, i.uv);
+				float4 snowSpecularColor = tex2D(_SnowSpecularMapTex, i.uv);
 
-				col = CalLighting(snowNormalWS, i.positionWS.xyz, col, specColor, 50);
+				col = CalLighting(snowNormalWS, i.positionWS.xyz, col, snowSpecularColor, 50);
 				// sample texture and return it
-				col.rgb = difference*_SnowColor.rgb + (1 - difference) *col;
+				col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
 
 				//float depthValue = abs(i.vertex.z);
 				//col.a	= depthValue;
