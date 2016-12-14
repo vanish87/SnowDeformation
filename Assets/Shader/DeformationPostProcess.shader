@@ -53,8 +53,8 @@ Shader "Snow/DeformationPostProcess" {
 
 				float elevationDistance = getElevation(0.5, newInfo.y, newInfo.x);
 
-				float ratio = clamp(elevationDistance / 3.5, 0, 1);
-				float height = max(elevationDistance, 0.3);
+				float ratio = elevationDistance / 1;
+				float height = 0.05;// max(elevationDistance, 0.3);
 
 				float elevation = ((pow((0.5 - (2 * ratio)), 2) + 1) * height);
 				//float2 target = sampleToOffset(_NewDepthTex, i.uv, 10);

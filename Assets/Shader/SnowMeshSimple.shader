@@ -165,7 +165,7 @@ Shader "Snow/SnowMeshSimple"
 					o.Delta.x = clamp(-Delta / (_SnowCameraZScale * 0.5), -0.5, 0);
 					o.Delta.z = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
 				}
-				//positionWorldSpace.y = SnowElevationHeight >0?(1-SnowElevationHeight) * 50 : positionWorldSpace.y;
+				positionWorldSpace.y += SnowElevationHeight*50;
 
 
 				o.Delta.y = SnowAccumulationInfo.a;
