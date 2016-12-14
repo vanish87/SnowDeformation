@@ -27,7 +27,7 @@ Shader "Snow/RenderDepthAndObjectHeight" {
 				float Scale = 1.5;
 				float4 x = float4(Scale, 0, 0, 0);
 				float4 y = float4(0, Scale, 0, 0);
-				float4 z = float4(0, 0, Scale, 0);
+				float4 z = float4(0, 0, 1, 0);
 				float4 w = float4(0, 0, 0, 1);
 
 				localScale = float4x4(x, y, z, w);

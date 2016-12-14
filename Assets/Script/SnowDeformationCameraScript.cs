@@ -57,7 +57,7 @@ public class SnowDeformationCameraScript : MonoBehaviour
         depthCamera.targetTexture = mrtTex[0];*/
     }
 
-    void ClearDepth()
+    public void ClearDepth()
     {
         RenderTexture oldRT = RenderTexture.active;
         Graphics.SetRenderTarget(currentSnowHeight);
