@@ -15,16 +15,19 @@ Shader "Snow/RenderDepthAndObjectHeight" {
 				float4 pos			: SV_POSITION;
 				float2 heightAndDis	: TEXCOORD2;
 			};
-			
-			float _ObjectMinHeight;
+
 			float3 _ObjectCenter;
+			float _ObjectMinHeight;
 			float _DeformationScale;
+			float _ElevationTrailScale;
 
 			float4x4 localScale;
 
 			v2f vert( appdata_full v ) {
 				v2f o;
-				float Scale = 2.5;
+				//first scale object on xz plane to calculate trail elevation later in frag shader.
+				//this _ElevationTrailScale is used to define the area where Trail will be rendered,
+				float Scale = _ElevationTrailScale;
 				float4 x = float4(Scale, 0, 0, 0);
 				float4 y = float4(0, 1, 0, 0);
 				float4 z = float4(0, 0, Scale, 0);
@@ -34,9 +37,9 @@ Shader "Snow/RenderDepthAndObjectHeight" {
 				v.vertex = mul(localScale, v.vertex);
 
 				float3 posWS = mul(unity_ObjectToWorld, v.vertex);
+				//object deformation height is defiend by the distance between object center and the vertex to be rendered in xz plane.
 				float2 disVec =  float2(_ObjectCenter.xz - posWS.xz);
 				float dis = length(disVec);
-
 				
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.heightAndDis = float2(_ObjectMinHeight, dis);
@@ -44,14 +47,13 @@ Shader "Snow/RenderDepthAndObjectHeight" {
 			}
 
 			float4 frag(v2f i) : SV_Target{
-				float depthValue = i.heightAndDis.x + ((i.heightAndDis.y * i.heightAndDis.y) * _DeformationScale);
-				//depthValue = i.pos.z;
+				//calculate deformation height with distance: height = obj_min_height + dis * dis * _DeformationScale;
+				//note this height is in camera space
+				float deformationHeight = i.heightAndDis.x + ((i.heightAndDis.y * i.heightAndDis.y) * _DeformationScale);
+				//note this objectHeight is in camera space
 				float objectHeight = i.heightAndDis.x;
 
-
-				//do not linearize depth for orthographic camera
-				//if (objectHeight > 40) objectHeight = 0;
-				return float4(depthValue, objectHeight, 0, 0);
+				return float4(deformationHeight, objectHeight, 0, 0);
 			}
 			ENDCG
 		}	

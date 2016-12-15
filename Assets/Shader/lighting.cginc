@@ -60,3 +60,14 @@ float3 TransfromToTextureCoord(float4 Position, float4x4 CameraMatirx, float Cam
 	heightUV.y = clamp((heightUV.y + 1) * 0.5, 0.0, 1.0);
 	return heightUV;
 }
+
+const float ElevationSclae = 100;
+//set elevation to nromalize value
+float encodeElevation(float elevation)
+{
+	return elevation / ElevationSclae;
+}
+float decodeElevation(float elevation)
+{
+	return elevation * ElevationSclae;
+}

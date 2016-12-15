@@ -5,14 +5,19 @@ using System.Collections;
 [ExecuteInEditMode]
 [RequireComponent(typeof(Camera))]
 
+//SnowAccumulationCamera will rendering normal and depth of objects in layer with "SnowAccumulatedObject"
+//When rendering snow mesh later, its shader will get SnowAccumulatedObject info and calculate correct deformation and accumulation.
+
 public class SnowAccumulationCameraScript : PostEffectsBase
 {
-    public Shader depthShader;//not used: keep tracking of trails;Scene/Object informal is set by SnowCoveredObject.cs
-    public Material material; //not used: depth is setup while rendering objects
+    private Shader depthShader = null;
+    private Material material = null;
 
     public Camera accDepthCamera;
     public RenderTexture snowNormalsAndHeightTex;
 
+
+    //blur script from unity official blur
     [Range(0, 2)]
     public int downsample = 1;
 
@@ -36,24 +41,11 @@ public class SnowAccumulationCameraScript : PostEffectsBase
     // Update is called once per frame
     void Update()
     {
-//         RenderTexture currentRT = RenderTexture.active;
-//         RenderTexture.active = accDepthCamera.targetTexture;
-//         accDepthCamera.Render();
-//         RenderTexture.active = currentRT;
-    }
-    
-    void OnPreRender()
-    {
-        //         //Graphics.SetRenderTarget(snowNormalsAndHeightTex);
-        //         GL.Clear(true, true, Color.black);
-       //Debug.Log("PreRender Acc camera");
+
     }
 
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        //Graphics.Blit(source, destination, );
-        //Graphics.Blit(source, destination, material);
-        //Debug.Log("OnRenderImage Acc camera");
         if (CheckResources() == false)
         {
             Graphics.Blit(source, destination);
@@ -103,18 +95,21 @@ public class SnowAccumulationCameraScript : PostEffectsBase
 
     public override bool CheckResources()
     {
-
-        //PostEffectsBase.Start();
         if (depthShader == null)
         {
             depthShader = Shader.Find("Snow/RenderNormalAndDepth");
-            material = new Material(depthShader);
-            material.hideFlags = HideFlags.HideAndDontSave;
-            accDepthCamera = GetComponent<Camera>();
-            accDepthCamera.depthTextureMode = DepthTextureMode.Depth;
+        }
 
+        material = CheckShaderAndCreateMaterial(depthShader, material);
+        material.hideFlags = HideFlags.HideAndDontSave;
+
+        accDepthCamera = GetComponent<Camera>();
+        accDepthCamera.depthTextureMode = DepthTextureMode.Depth;
+
+        if (snowNormalsAndHeightTex == null)
+        {
             //setup render texture
-            snowNormalsAndHeightTex = new RenderTexture(512, 512, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+            snowNormalsAndHeightTex = new RenderTexture(1024, 1024, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
             snowNormalsAndHeightTex.name = "SnowNormalsAndHeightTex";
             //accDepthCamera.SetTargetBuffers(snowNormalsAndHeightTex.colorBuffer, snowNormalsAndHeightTex.depthBuffer);
             accDepthCamera.targetTexture = snowNormalsAndHeightTex;
@@ -122,6 +117,11 @@ public class SnowAccumulationCameraScript : PostEffectsBase
         
 
         CheckSupport(false);
+
+        if (blurShader == null)
+        {
+            blurShader = Shader.Find("Hidden/FastBlur");
+        }
 
         blurMaterial = CheckShaderAndCreateMaterial(blurShader, blurMaterial);
 

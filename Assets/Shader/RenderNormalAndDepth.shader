@@ -30,9 +30,9 @@
 			float4 frag (v2f i) : SV_Target
 			{
 				float4 col;
-				float depthValue = abs(i.vertex.z);
+				float depthValue = i.vertex.z;
 				col.a	= depthValue;
-				col.rgb = normalize(i.normalWS.xyz);
+				col.rgb = (normalize(i.normalWS.xyz) + 1) * 0.5;
 				//col.rgb = depthValue;
 				return col;
 			}

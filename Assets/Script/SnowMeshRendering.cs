@@ -2,6 +2,10 @@
 using System.Collections;
 
 [ExecuteInEditMode]
+[RequireComponent(typeof(Renderer))]
+
+//when rendering snow mesh, it reads information from AccumulationTex and DeformationTex, 
+//and combine them with snow mesh height position
 public class SnowMeshRendering : MonoBehaviour {
 
     public RenderTexture AccumulationTex;
@@ -15,16 +19,16 @@ public class SnowMeshRendering : MonoBehaviour {
     // Use this for initialization
     void Start()
     {
-        //snowHeighMapCamera = GameObject.Find("SnowDeformationCamera").GetComponent<Camera>();
-        //snowAccumulationMapCamera = GameObject.Find("SnowAccumulationCamera").GetComponent<Camera>();
-
+        snowHeighMapCamera = GameObject.Find("SnowDeformationCamera").GetComponent<Camera>();
+        snowAccumulationMapCamera = GameObject.Find("SnowAccumulationCamera").GetComponent<Camera>();
         
-        //SnowAccumulationCamera otherScript = GetComponent<SnowAccumulationCamera>();
-        //AccumulationTex = otherScript.AccumulationTex;
         AccumulationTex = snowAccumulationMapCamera.GetComponent<SnowAccumulationCameraScript>().snowNormalsAndHeightTex;
         DeformationTex = snowHeighMapCamera.GetComponent<SnowDeformationCameraScript>().snowHeightTex;
 
-        snowMaterial = new Material(Shader.Find("Snow/SnowMeshSimple"));
+        if (snowMaterial == null)
+        {
+            snowMaterial = new Material(Shader.Find("Snow/SnowMeshSimple"));
+        }
 
         snowMaterial.SetTexture("_SnowAccumulationMap", AccumulationTex);
         snowMaterial.SetTexture("_SnowHeightMap", DeformationTex);
@@ -51,11 +55,8 @@ public class SnowMeshRendering : MonoBehaviour {
 
         AccumulationTex = snowAccumulationMapCamera.GetComponent<SnowAccumulationCameraScript>().snowNormalsAndHeightTex;
         DeformationTex = snowHeighMapCamera.GetComponent<SnowDeformationCameraScript>().snowHeightTex;
+
         snowMaterial.SetTexture("_SnowAccumulationMap", AccumulationTex);
         snowMaterial.SetTexture("_SnowHeightMap", DeformationTex);
-    }
-    void OnPostRender()
-    {
-        //Debug.Log("render Snow Mesh");
     }
 }

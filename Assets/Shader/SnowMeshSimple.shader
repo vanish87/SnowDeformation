@@ -118,13 +118,15 @@ Shader "Snow/SnowMeshSimple"
 				float3 accuHeightUV = TransfromToTextureCoord(positionWorldSpace, _SnowAccumulationCameraMatrix, _SnowCameraSize);
 
 				//Extract info from 2 height map texture
-				float  SnowDeformationHeight = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0)).r * _SnowCameraZScale;
-				float  SnowObjectHeight = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0)).g;
-				float  SnowElevationHeight = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0)).b;
+				float4 SnowDeformationInfo	 = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0));
 				float4 SnowAccumulationInfo  = tex2Dlod(_SnowAccumulationMap, float4(accuHeightUV.xy, 0, 0));
 
+				float  SnowDeformationHeight = SnowDeformationInfo.r * _SnowCameraZScale;
+				float  SnowObjectHeight = SnowDeformationInfo.g;
+				float  SnowElevationHeight = SnowDeformationInfo.b;
+
 				float SnowAccumulationHeight  = SnowAccumulationInfo.a * _SnowCameraZScale;
-				float3 SnowAccumulationNormal = SnowAccumulationInfo.rgb;
+				float3 SnowAccumulationNormal = (SnowAccumulationInfo.rgb * 2) - 1;
 
 				float SnowMeshHeight = abs(heightUV.z);
 
@@ -135,7 +137,7 @@ Shader "Snow/SnowMeshSimple"
 				//caculate snow height delta
 				if (IsSnowCovered)
 				{
-					Delta = min(max(SnowMeshHeight - SnowAccumulationHeight, 0), 2);
+					Delta = max(SnowMeshHeight - SnowAccumulationHeight, 0) * 0.1;
 					float SnowDifference = dot(SnowAccumulationNormal, _SnowDirection);
 					if (SnowDifference>  _SticknessCos)
 					{
@@ -166,7 +168,9 @@ Shader "Snow/SnowMeshSimple"
 					o.Delta.z = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
 				}
 				if (SnowElevationHeight > 0)
-					positionWorldSpace.y += SnowElevationHeight * 100;
+				{
+					positionWorldSpace.y += decodeElevation(SnowElevationHeight);
+				}
 
 
 				o.Delta.y = SnowAccumulationInfo.a;

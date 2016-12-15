@@ -15,6 +15,7 @@ Shader "Snow/DeformationPostProcess" {
 			#pragma fragment frag
 			#pragma enable_d3d11_debug_symbols
 			#include "UnityCG.cginc"
+			#include "lighting.cginc"
 
 			struct v2f {
 				float4 pos		: SV_POSITION;
@@ -43,61 +44,52 @@ Shader "Snow/DeformationPostProcess" {
 				float elevationDistance = distanceFromFoot - depressinDis;
 				return elevationDistance;
 			}
-
-
+			
 			//this post process do two things:
-			//1. calculate new deformation if it has a deeper depths; fill snow deformation when it is nessceary.
-			//2. calculate elevation by sampling narbor pixels, then write elevation value for mesh rendering.
+			//1. calculate new deformation if it has a deeper depths; refill snow deformation when it is nessceary.
+			//2. calculate elevation with snow height, object height and deformation height, then write elevation value for mesh rendering.
 			float4 frag(v2f i) : SV_Target{
 				float3 newInfo = tex2D(_NewDepthTex, i.uv.xy).rgb;
 				float3 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgb;
+
+				float deformationHeight = newInfo.x;
+				float objectHeight = newInfo.y;
 
 				//grater than 0 => elevation
 				//less than 0 => deformation
 				//snow height = 0.5
 				float elevation = 0;
-				if (newInfo.x < 1 && newInfo.x > 0.5)
+				float snowHeight = 0.5;
+				//check if this pixel is a trail pixel
+				if (deformationHeight < 1 && objectHeight < 1 &&
+					deformationHeight > snowHeight && 
+					snowHeight > objectHeight)
 				{
-					float snowHeight = 0.5;
-					float elevationDistance = getElevation(snowHeight, newInfo.y, newInfo.x);
+					//deformationHeight > snowHeight so elevationDistance is bigger than 0
+					float elevationDistance = getElevation(snowHeight, objectHeight, deformationHeight);
 
-					float maxElevationDistance = snowHeight - newInfo.y;
-					float ratio = elevationDistance / (maxElevationDistance > 0 ? maxElevationDistance : 1);//scale * 2
-					float height = maxElevationDistance * _ArtistScale;// 0.05;// max(elevationDistance, 0.3);
+					//the deeper an oject got into snow, the greater ElevationHeightScale it produces.
+					float ElevationHeightScale = snowHeight - objectHeight;
+					float ratio = elevationDistance / ElevationHeightScale;
+					float height = ElevationHeightScale * _ArtistScale;
 
-					//float elevation = ((-pow((0.5 - (2 * ratio)), 2) + 1) * height);
-					elevation = (-2 * pow((ratio - 0.7), 2) + 1) * height / 100;
-					//float2 target = sampleToOffset(_NewDepthTex, i.uv, 10);
-					//if (target.r > 0 && target.r < 1)
-					//{
-					//	return float4(1, 0, 0, 0);
-					//}
-
-					
+					//0.7 = sqrt(2) * 0.5;
+					elevation = encodeElevation((-2 * pow((ratio - 0.7), 2) + 1) * height);					
 				}
-				//depthValue = objectHeight;
-				if (currentInfo.x < 0.5)
+				//if it has current deformation, then do not make trials
+				if (currentInfo.x < snowHeight)
 				{
 					elevation = 0;
 				}
+				//if it has current elevation, then make a greater one
 				else if (currentInfo.z < 1)
 				{
 					elevation = max(elevation, currentInfo.z);
 				}
 				
-				//if (hasNewDepth)
-				{
-
-				}
-				//else
-				{
-					//depthValue = currentDepthValue + _RecoverSpeed*_DeltaTime;
-				}
+				//update current deformation info too
 				bool hasNewDepth = newInfo.x < currentInfo.x;
 				float2 ret = hasNewDepth ? newInfo : currentInfo;
-
-				//if (newInfo.x < 1 && newInfo.x > 0.5)
-				//	ret.x = 0.4;
 				//do not linearize depth for orthographic camera
 				return float4(ret, elevation, 0);
 			}

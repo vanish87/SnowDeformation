@@ -13,7 +13,6 @@ public class ClearMeshDeformation : Editor
         if (GUILayout.Button("Clear deformation"))
         {
             myScript.ClearDepth();
-            //myScript.Generate();
         }
     }
 }

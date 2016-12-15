@@ -2,6 +2,10 @@
 using System.Collections;
 
 [ExecuteInEditMode]
+
+//SnowCoveredObject will render normal and depth of objects with RenderNormalAndDepth shader, 
+//then render object for main camera with SnowObject shader
+
 public class SnowCoveredObject : MonoBehaviour {
 
     public Camera snowAccumulationCamera;
@@ -26,6 +30,11 @@ public class SnowCoveredObject : MonoBehaviour {
         }
         renderHeightMapMat = new Material(renderHeightMapShader);
         normalObjectMat = new Material(normalObjectShader);
+
+        if(snowAccumulationCamera == null)
+        {
+            snowAccumulationCamera = GameObject.Find("SnowAccumulationCamera").GetComponent<Camera>();
+        }
     }
 	
 	// Update is called once per frame
@@ -35,6 +44,7 @@ public class SnowCoveredObject : MonoBehaviour {
 	}
     void OnWillRenderObject()
     {
+        //switch between AccumulationCamera and normal main camera
         if (Camera.current == snowAccumulationCamera)
         {
             //set render depth material

@@ -1,28 +1,43 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+
 [ExecuteInEditMode]
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+
 public class MeshGeneration : MonoBehaviour {
 
     public int xSize, ySize;
+    [Range(1, 50)]
     public float NoiseScale = 10;
-    public float NoiseHeithtScale = 0.5f;
-    
-    [Range(1, 4)]
-    public float MaxMeshHeight = 3.0f;
+    [Range(0, 4)]
+    public float NoiseHeightScale = 0.5f;    
 
     public Camera snowAccumulationMapCamera;
 
     private Vector3[] vertices = null;
     private Mesh mesh = null;
-    public Texture2D MeshHeightMapCPU;
-    private RenderTexture MeshHeightMap;
+    public Texture2D MeshHeightMapCPU = null;
+    private RenderTexture MeshHeightMap = null;
     // Use this for initialization
 
     SnowMesh newmesh;
     void Start()
     {
+        if (snowAccumulationMapCamera == null)
+        {
+            snowAccumulationMapCamera = GameObject.Find("SnowAccumulationCamera").GetComponent<Camera>();
+        }
+        if(MeshHeightMap == null)
+        {
+            MeshHeightMap = snowAccumulationMapCamera.GetComponent<SnowAccumulationCameraScript>().snowNormalsAndHeightTex;
+        }
+        if (MeshHeightMapCPU == null)
+        {
+            MeshHeightMapCPU = new Texture2D(MeshHeightMap.width, MeshHeightMap.height, TextureFormat.ARGB32, true);
+            MeshHeightMapCPU.name = "MeshHeightMapCPU";
+        }
+
         Generate();
         //CreateNewMesh();
     }
@@ -35,17 +50,17 @@ public class MeshGeneration : MonoBehaviour {
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Procedural Grid";
 
-        int Leight = (xSize + 1) * (ySize + 1);
-        vertices = new Vector3[Leight];
-        Vector2[] uv = new Vector2[Leight];
-        Vector4[] tangents = new Vector4[Leight];
+        int length = (xSize + 1) * (ySize + 1);
+        vertices = new Vector3[length];
+        Vector2[] uv = new Vector2[length];
+        Vector4[] tangents = new Vector4[length];
         Vector4 tangent = new Vector4(1f, 0f, 0f, -1f);
         for (int i = 0, y = 0; y <= ySize; y++)
         {
             for (int x = 0; x <= xSize; x++, i++)
             {
                 float heightNoise = Mathf.PerlinNoise((float)y/(xSize) * NoiseScale, (float)x/(ySize) * NoiseScale);
-                vertices[i] = new Vector3(x - (xSize/2), heightNoise * NoiseHeithtScale, y - (ySize/2));
+                vertices[i] = new Vector3(x - (xSize/2), heightNoise * NoiseHeightScale, y - (ySize/2));
                 uv[i] = new Vector2((float)x / xSize, (float)y / ySize);
                 tangents[i] = tangent;
             }
@@ -91,7 +106,7 @@ public class MeshGeneration : MonoBehaviour {
                 else
                 {
                     float heightNoise = Mathf.PerlinNoise((float)y / (xSize) * NoiseScale, (float)x / (ySize) * NoiseScale);
-                    Temp[i].y = heightNoise * NoiseHeithtScale;
+                    Temp[i].y = heightNoise * NoiseHeightScale;
                 }
             }
         }
@@ -192,7 +207,7 @@ public class MeshGeneration : MonoBehaviour {
             {
                 float heightNoise = Mathf.PerlinNoise((float)y / (xSize) * NoiseScale, (float)x / (ySize) * NoiseScale);
                 //NewMesh.Triangle[i] = xSize * y + x;
-                NewMesh.AddVertex(new Vector3(x - (xSize / 2), heightNoise * NoiseHeithtScale, y - (ySize / 2)));
+                NewMesh.AddVertex(new Vector3(x - (xSize / 2), heightNoise * NoiseHeightScale, y - (ySize / 2)));
             }
         }
 
@@ -205,8 +220,6 @@ public class MeshGeneration : MonoBehaviour {
         if (MeshHeightMap == null)
         {
             MeshHeightMap = snowAccumulationMapCamera.GetComponent<SnowAccumulationCameraScript>().snowNormalsAndHeightTex;
-            MeshHeightMapCPU = new Texture2D(MeshHeightMap.width, MeshHeightMap.height, TextureFormat.ARGB32,true);
-            MeshHeightMapCPU.name = "MeshHeightMapCPU";
         }
 
         RenderTexture OldRT = RenderTexture.active;
@@ -214,8 +227,6 @@ public class MeshGeneration : MonoBehaviour {
         MeshHeightMapCPU.ReadPixels(new Rect(0, 0, MeshHeightMap.width, MeshHeightMap.height), 0, 0);
         MeshHeightMapCPU.Apply();
         RenderTexture.active = OldRT;
-
-
         //CreateNewMesh();
         //ReGenerateMesh();
 
