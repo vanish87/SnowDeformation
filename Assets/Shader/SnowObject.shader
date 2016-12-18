@@ -110,22 +110,15 @@
 				float4 snowShadeColor = tex2D(_SnowShadeMapTex, i.uv);
 
 				float4 snowSpecularColor = tex2D(_SnowSpecularMapTex, i.uv);
-				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv+ pos_eye.xy);
+				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.positionWS.xy);
 				float4 snowSpecularGlit = tex2D(_SnowSpecularGlitTex, i.uv);
 
 				//snowShadeColor = float4(0, 0, 0, 1);
-				if (snowSpecularNoise.r > 0.5)
-				{
-					if (snowSpecularGlit.r > 0.3)
-					{
-						snowShadeColor.rgb = 1;
-					}
-				}
 
 				col = CalLighting(snowNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, 50);
-				if (snowSpecularGlit.r > 0.7)
+				//if (snowSpecularGlit.r > 0.7)
 				{
-					col.rgb = snowSpecularGlit.r + 0.2;
+					//col.rgb = glitter;
 				}
 				// sample texture and return it
 				//col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
