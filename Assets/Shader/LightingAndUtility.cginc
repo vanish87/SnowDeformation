@@ -1,9 +1,8 @@
 ﻿
-
-
-
 static const float ElevationScale = 50;
 static const float PI = 3.141592653;
+float _FrenalParameter;
+float _FrenalBlending;
 
 float4 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, float4 albedo)
 {
@@ -33,8 +32,8 @@ float SchlickFresnel(float R0, float3 positionWS, float3 normalWS)
 float4 CalFresnal(float4 ColorFresnel, float4 ColorReflection, float3 PositionWS, float3 NormalWS)
 {
 	float4 FinalColor;
-	float reflectionFactor = SchlickFresnel(0.001, PositionWS, NormalWS);
-	FinalColor = lerp(ColorReflection, ColorFresnel, reflectionFactor);
+	float reflectionFactor = SchlickFresnel(_FrenalParameter, PositionWS, NormalWS);
+	FinalColor = lerp(ColorReflection, ColorFresnel, reflectionFactor * _FrenalBlending);
 	return FinalColor;
 }
 
@@ -80,18 +79,18 @@ float4 CalLighting(float3 normal,
 
 			//Cdiff * Clight * (N * Lc)
 			diffuse = diffuseAlbedo * light_color * diffuse_angle;
-			diffuse = OrenNayar(light_dir, pos_eye, normal, 0.3, ab);
+			diffuse = diffuseAlbedo;// *OrenNayar(light_dir, pos_eye, normal, 0.3, ab);
 			diffuse *= (1.0f - SchlickFresnel(0.3, position, normal));
 			//diffuse = light_color * diffuse_angle;
 			//pow(R*V, alpha) * Cspec * Clight * (N * Lc)
 			spec = spec_factor * float4(specularAlbedo, 1.0f) * light_color * diffuse_angle;
 
 			//float4 spectColor = CalFresnal(spec, float4(1,0,0,1), position, normal);
-			spec = CalFresnal(float4(135.0f/255, 206.0f/255, 1, 1), spec, position, normal);
+			spec = CalFresnal(float4(135.0f/255, 206.0f/255, 240.0f/255, 1), spec, position, normal);
 			//spec.rgb = SchlickFresnel(0, position, normal);
 		}
 
-		float4 acc_color = (ambient + diffuse+ spec);
+		float4 acc_color = (ambient + diffuse + spec);
 		litColor = litColor + acc_color;
 	}
 	return litColor;
@@ -111,7 +110,7 @@ float3 TransfromToTextureCoord(float4 Position, float4x4 CameraMatirx, float Cam
 	return heightUV;
 }
 
-//set elevation to nromalize value
+//set elevation to normalize value
 float encodeElevation(float elevation)
 {
 	return elevation / ElevationScale;

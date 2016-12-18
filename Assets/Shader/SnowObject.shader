@@ -17,6 +17,8 @@
 		_SnowDirection("Snow Direction", Vector) = (0,1,0)
 		_SnowDepth("Snow Depth", Range(0,0.2)) = 0.1
 		_Wetness("Wetness", Range(0, 0.5)) = 0.3
+		_FrenalParameter("Frenal Parameter", Range(0, 0.5)) = 0.3
+		_FrenalBlending("Frenal Blending", Range(0, 1)) = 0.6
 	}
 	SubShader
 	{
@@ -58,6 +60,7 @@
 			float4 _SnowDirection;
 			float _SnowDepth;
 			float _Wetness;
+
 
 			v2f vert (appdata_full v)
 			{
@@ -106,15 +109,19 @@
 				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv);
 				float4 snowSpecularGlit  = tex2D(_SnowSpecularGlitTex, i.uv);
 
+				//snowShadeColor = float4(0, 0, 0, 1);
 				//if (snowSpecularNoise.r > 0.5)
 				{
 					snowSpecularColor = snowSpecularGlit;
-					col = snowSpecularGlit;
+					if (snowSpecularGlit.r > 0.3)
+					{
+						snowShadeColor.rgb = 1;
+					}
 				}
 
-				col = CalLighting(snowNormalWS, i.positionWS.xyz, col, snowSpecularColor, 50);
+				col = CalLighting(snowNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, 50);
 				// sample texture and return it
-				col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
+				//col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
 
 				//float depthValue = abs(i.vertex.z);
 				//col.a	= depthValue;
