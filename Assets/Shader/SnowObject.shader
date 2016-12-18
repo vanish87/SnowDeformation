@@ -90,12 +90,14 @@
 				float3 B = normalize(i.bitangentWS);// cross(N, T);
 				float3x3 TtoW = float3x3(T, B, N);
 
-				float4 normalMap = tex2D(_SnowNormalMapTex, i.uv);
+
+				float4 normalMap = tex2D(_SnowNormalMapTex, i.uv * 100);
 				float3 normalDir = normalize(UnpackNormal(normalMap));
 
 				float3 normalDirection =  normalize(mul(float4(normalDir,0), TtoW));
 
 				float3 snowNormalWS = normalDirection;
+				//snowNormalWS.y += snowSpecularNoise.r;
 				//snowNormalWS = i.normalWS;
 
 				half difference = dot(snowNormalWS, _SnowDirection.xyz) - lerp(1, -1, _Snow);
@@ -103,16 +105,17 @@
 
 				col = tex2D(_MainTex, i.uv.xy);
 
+				float3 pos_eye = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);
 				float3 specColor = float3(1, 1, 1);
 				float4 snowShadeColor = tex2D(_SnowShadeMapTex, i.uv);
+
 				float4 snowSpecularColor = tex2D(_SnowSpecularMapTex, i.uv);
-				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv);
-				float4 snowSpecularGlit  = tex2D(_SnowSpecularGlitTex, i.uv);
+				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv+ pos_eye.xy);
+				float4 snowSpecularGlit = tex2D(_SnowSpecularGlitTex, i.uv);
 
 				//snowShadeColor = float4(0, 0, 0, 1);
-				//if (snowSpecularNoise.r > 0.5)
+				if (snowSpecularNoise.r > 0.5)
 				{
-					snowSpecularColor = snowSpecularGlit;
 					if (snowSpecularGlit.r > 0.3)
 					{
 						snowShadeColor.rgb = 1;
@@ -120,6 +123,10 @@
 				}
 
 				col = CalLighting(snowNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, 50);
+				if (snowSpecularGlit.r > 0.7)
+				{
+					col.rgb = snowSpecularGlit.r + 0.2;
+				}
 				// sample texture and return it
 				//col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
 

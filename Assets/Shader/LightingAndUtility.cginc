@@ -86,7 +86,7 @@ float4 CalLighting(float3 normal,
 			spec = spec_factor * float4(specularAlbedo, 1.0f) * light_color * diffuse_angle;
 
 			//float4 spectColor = CalFresnal(spec, float4(1,0,0,1), position, normal);
-			spec = CalFresnal(float4(135.0f/255, 206.0f/255, 240.0f/255, 1), spec, position, normal);
+			spec = CalFresnal(float4(235.0f/255, 245.0f/255, 255.0f/255, 1), spec, position, normal);
 			//spec.rgb = SchlickFresnel(0, position, normal);
 		}
 
