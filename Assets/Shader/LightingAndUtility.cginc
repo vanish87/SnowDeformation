@@ -79,7 +79,7 @@ float4 CalLighting(float3 normal,
 
 			//Cdiff * Clight * (N * Lc)
 			diffuse = diffuseAlbedo * light_color * diffuse_angle;
-			diffuse = diffuseAlbedo;// *OrenNayar(light_dir, pos_eye, normal, 0.3, ab);
+			diffuse = diffuseAlbedo *OrenNayar(light_dir, pos_eye, normal, 0.5, ab);
 			diffuse *= (1.0f - SchlickFresnel(0.3, position, normal));
 			//diffuse = light_color * diffuse_angle;
 			//pow(R*V, alpha) * Cspec * Clight * (N * Lc)
