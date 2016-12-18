@@ -30,7 +30,7 @@
 			#pragma fragment frag
 			
 			#include "UnityCG.cginc"
-			#include "lighting.cginc"
+			#include "LightingAndUtility.cginc"
 			
 			struct v2f
 			{
@@ -89,6 +89,7 @@
 				float3 normalDirection =  normalize(mul(float4(normalDir,0), TtoW));
 
 				float3 snowNormalWS = normalDirection;
+				snowNormalWS = i.normalWS;
 
 				half difference = dot(snowNormalWS, _SnowDirection.xyz) - lerp(1, -1, _Snow);
 				difference = saturate(difference / _Wetness);

@@ -45,7 +45,7 @@ public class MeshGeneration : MonoBehaviour {
     public void Generate()
     {
         if (xSize <= 0 || ySize <= 0) return;
-        if (mesh != null) return;
+        //if (mesh != null) return;
 
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Procedural Grid";

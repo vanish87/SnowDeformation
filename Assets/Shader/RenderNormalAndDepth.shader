@@ -33,7 +33,7 @@
 				float depthValue = i.vertex.z;
 				col.a	= depthValue;
 				col.rgb = (normalize(i.normalWS.xyz) + 1) * 0.5;
-				//col.rgb = depthValue;
+				//col.r = depthValue<1? depthValue:0;
 				return col;
 			}
 			ENDCG

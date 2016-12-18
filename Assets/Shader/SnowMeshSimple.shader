@@ -40,7 +40,7 @@ Shader "Snow/SnowMeshSimple"
 			
 
 			#include "UnityCG.cginc"
-			#include "lighting.cginc"
+			#include "LightingAndUtility.cginc"
 
 			struct appdata
 			{
@@ -87,26 +87,6 @@ Shader "Snow/SnowMeshSimple"
 			float _SnowCameraSize; 
 			float _SnowCameraZScale;
 
-			
-
-			float Fresnel(float Bias, float Scale, float Power, float3 PositionWS, float3 NormalWS)
-			{
-				float3 I = normalize(PositionWS - _WorldSpaceCameraPos);
-				float3 Reflect = reflect(I, NormalWS);
-				float ReflectionCoefficient = Bias + Scale*pow(1 + dot(I, NormalWS), Power);
-				return ReflectionCoefficient;
-			}
-
-			float4 CalFresnal(float4 ColorReflection, float4 ColorRefraction, float3 PositionWS, float3 NormalWS)
-			{
-				float4 FinalColor;
-				float reflectionFactor = Fresnel(1, 1, 2, PositionWS, NormalWS);
-				FinalColor = lerp(ColorRefraction, ColorReflection, reflectionFactor);
-				return FinalColor;
-			}
-
-					
-
 			v2f vert(appdata v)
 			{
 				v2f o;
@@ -141,7 +121,7 @@ Shader "Snow/SnowMeshSimple"
 					float SnowDifference = dot(SnowAccumulationNormal, _SnowDirection);
 					if (SnowDifference>  _SticknessCos)
 					{
-						positionWorldSpace.y += Delta* _SnowHeight;
+						positionWorldSpace.y += SnowMeshHeight*0.5+(Delta* _SnowHeight);
 						positionWorldSpace.xyz += SnowAccumulationNormal.xyz * _AccumulationSacle.xyz * _SnowDirection;
 					}
 
@@ -172,6 +152,7 @@ Shader "Snow/SnowMeshSimple"
 					positionWorldSpace.y += decodeElevation(SnowElevationHeight);
 				}
 
+				//positionWorldSpace.y = SnowAccumulationHeight;
 
 				o.Delta.y = SnowAccumulationInfo.a;
 

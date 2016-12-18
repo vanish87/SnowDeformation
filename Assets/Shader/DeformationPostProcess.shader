@@ -15,7 +15,7 @@ Shader "Snow/DeformationPostProcess" {
 			#pragma fragment frag
 			#pragma enable_d3d11_debug_symbols
 			#include "UnityCG.cginc"
-			#include "lighting.cginc"
+			#include "LightingAndUtility.cginc"
 
 			struct v2f {
 				float4 pos		: SV_POSITION;
@@ -51,6 +51,7 @@ Shader "Snow/DeformationPostProcess" {
 			float4 frag(v2f i) : SV_Target{
 				float3 newInfo = tex2D(_NewDepthTex, i.uv.xy).rgb;
 				float3 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgb;
+				currentInfo.z = decodeElevation(currentInfo.z);
 
 				float deformationHeight = newInfo.x;
 				float objectHeight = newInfo.y;
@@ -74,7 +75,7 @@ Shader "Snow/DeformationPostProcess" {
 					float height = ElevationHeightScale * _ArtistScale;
 
 					//0.7 = sqrt(2) * 0.5;
-					elevation = encodeElevation((-2 * pow((ratio - 0.7), 2) + 1) * height);					
+					elevation = (-2 * pow((ratio - 0.7), 2) + 1) * height;					
 				}
 				//if it has current deformation, then do not make trials
 				if (currentInfo.x < snowHeight)
@@ -82,7 +83,7 @@ Shader "Snow/DeformationPostProcess" {
 					elevation = 0;
 				}
 				//if it has current elevation, then make a greater one
-				else if (currentInfo.z < 1)
+				else if (currentInfo.z < ElevationScale)
 				{
 					elevation = max(elevation, currentInfo.z);
 				}
@@ -91,7 +92,7 @@ Shader "Snow/DeformationPostProcess" {
 				bool hasNewDepth = newInfo.x < currentInfo.x;
 				float2 ret = hasNewDepth ? newInfo : currentInfo;
 				//do not linearize depth for orthographic camera
-				return float4(ret, elevation, 0);
+				return float4(ret, encodeElevation(elevation), 0);
 			}
 			ENDCG
 		}	
