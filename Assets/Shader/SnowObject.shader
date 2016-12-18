@@ -6,6 +6,8 @@
 		_SnowShadeMapTex("Snow Shade Map", 2D) = "white" {}
 		_SnowNormalMapTex("Snow Normal Map", 2D) = "white" {}
 		_SnowSpecularMapTex("Snow Specular Map", 2D) = "white" {}
+		_SnowSpecularNoiseTex("Snow Specular Noise", 2D) = "white" {}
+		_SnowSpecularGlitTex("Snow Specular glit", 2D) = "white" {}
 
 		_NormalMapTex("Normal Map", 2D) = "white" {}
 
@@ -47,6 +49,8 @@
 			sampler2D _SnowShadeMapTex;
 			sampler2D _SnowNormalMapTex;
 			sampler2D _SnowSpecularMapTex;
+			sampler2D _SnowSpecularNoiseTex;
+			sampler2D _SnowSpecularGlitTex;
 
 
 			float _Snow;
@@ -99,6 +103,14 @@
 				float3 specColor = float3(1, 1, 1);
 				float4 snowShadeColor = tex2D(_SnowShadeMapTex, i.uv);
 				float4 snowSpecularColor = tex2D(_SnowSpecularMapTex, i.uv);
+				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv);
+				float4 snowSpecularGlit  = tex2D(_SnowSpecularGlitTex, i.uv);
+
+				//if (snowSpecularNoise.r > 0.5)
+				{
+					snowSpecularColor = snowSpecularGlit;
+					col = snowSpecularGlit;
+				}
 
 				col = CalLighting(snowNormalWS, i.positionWS.xyz, col, snowSpecularColor, 50);
 				// sample texture and return it

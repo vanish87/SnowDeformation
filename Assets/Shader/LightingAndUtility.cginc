@@ -33,7 +33,7 @@ float SchlickFresnel(float R0, float3 positionWS, float3 normalWS)
 float4 CalFresnal(float4 ColorFresnel, float4 ColorReflection, float3 PositionWS, float3 NormalWS)
 {
 	float4 FinalColor;
-	float reflectionFactor = SchlickFresnel(0.3, PositionWS, NormalWS);
+	float reflectionFactor = SchlickFresnel(0.001, PositionWS, NormalWS);
 	FinalColor = lerp(ColorReflection, ColorFresnel, reflectionFactor);
 	return FinalColor;
 }
@@ -91,7 +91,7 @@ float4 CalLighting(float3 normal,
 			//spec.rgb = SchlickFresnel(0, position, normal);
 		}
 
-		float4 acc_color = (ambient + spec);
+		float4 acc_color = (ambient + diffuse+ spec);
 		litColor = litColor + acc_color;
 	}
 	return litColor;
