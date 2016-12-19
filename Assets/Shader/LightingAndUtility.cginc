@@ -97,7 +97,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float specularPower)
 {
 	float3 viewDir = normalize(_WorldSpaceCameraPos - position);
-	float3 lightDir = _WorldSpaceLightPos0.xyz;
+	float3 lightDir = float3(1, 1, 0);// _WorldSpaceLightPos0.xyz;
 
 
 	float4 ambient = float4(0.1f, 0.1f, 0.1f, 1.0f);
