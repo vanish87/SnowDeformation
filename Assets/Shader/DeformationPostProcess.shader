@@ -48,20 +48,21 @@ Shader "Snow/DeformationPostProcess" {
 			//this post process do two things:
 			//1. calculate new deformation if it has a deeper depths; refill snow deformation when it is nessceary.
 			//2. calculate elevation with snow height, object height and deformation height, then write elevation value for mesh rendering.
+
+			//_CurrentDepthTexture stores current deormation and elevation info
+			//r: deformationHeight; g: objectHeight; b: elevation
 			float4 frag(v2f i) : SV_Target{
 				float3 newInfo = tex2D(_NewDepthTex, i.uv.xy).rgb;
 				float3 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgb;
-				currentInfo.z = decodeElevation(currentInfo.z);
+				float currentElevation = decodeElevation(currentInfo.z);
 
 				float deformationHeight = newInfo.x;
 				float objectHeight = newInfo.y;
 
-				//grater than 0 => elevation
-				//less than 0 => deformation
 				//snow height = 0.5
 				float elevation = 0;
 				float snowHeight = 0.5;
-				//check if this pixel is a trail pixel
+				//check if this pixel is a trail pixel, trail pixel should calculate elevation
 				if (deformationHeight < 1 && objectHeight < 1 &&
 					deformationHeight > snowHeight && 
 					snowHeight > objectHeight)
@@ -75,6 +76,7 @@ Shader "Snow/DeformationPostProcess" {
 					float height = ElevationHeightScale * _ArtistScale;
 
 					//0.7 = sqrt(2) * 0.5;
+					//this equation should have two roots, one is (0,0), another is (sqrt(2), 0) and the vertex is (sqrt(2)/2, 1)
 					elevation = (-2 * pow((ratio - 0.7), 2) + 1) * height;					
 				}
 				//if it has current deformation, then do not make trials
@@ -83,15 +85,14 @@ Shader "Snow/DeformationPostProcess" {
 					elevation = 0;
 				}
 				//if it has current elevation, then make a greater one
-				else if (currentInfo.z < ElevationScale)
+				else if (currentElevation < ElevationScale)
 				{
-					elevation = max(elevation, currentInfo.z);
+					elevation = max(elevation, currentElevation);
 				}
 				
 				//update current deformation info too
 				bool hasNewDepth = newInfo.x < currentInfo.x;
 				float2 ret = hasNewDepth ? newInfo : currentInfo;
-				//do not linearize depth for orthographic camera
 				return float4(ret, encodeElevation(elevation), 0);
 			}
 			ENDCG

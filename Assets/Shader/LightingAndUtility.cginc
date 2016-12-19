@@ -1,6 +1,7 @@
 ﻿
 static const float ElevationScale = 50;
 static const float PI = 3.141592653;
+
 float _FrenalParameter;
 float _FrenalBlending;
 

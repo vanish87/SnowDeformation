@@ -41,8 +41,8 @@ public class MeshGeneration : MonoBehaviour {
         Generate();
         //CreateNewMesh();
     }
-   
-    public void Generate()
+
+    public void Generate(bool usingHeightMap = false)
     {
         if (xSize <= 0 || ySize <= 0) return;
         //if (mesh != null) return;
@@ -59,7 +59,15 @@ public class MeshGeneration : MonoBehaviour {
         {
             for (int x = 0; x <= xSize; x++, i++)
             {
-                float heightNoise = Mathf.PerlinNoise((float)y/(xSize) * NoiseScale, (float)x/(ySize) * NoiseScale);
+                float heightNoise = 0;
+                if (usingHeightMap)
+                {
+                    heightNoise = GetHeightValue(x, y);
+                }
+                else
+                {
+                    heightNoise = Mathf.PerlinNoise((float)y / (xSize) * NoiseScale, (float)x / (ySize) * NoiseScale);
+                }
                 vertices[i] = new Vector3(x - (xSize/2), heightNoise * NoiseHeightScale, y - (ySize/2));
                 uv[i] = new Vector2((float)x / xSize, (float)y / ySize);
                 tangents[i] = tangent;

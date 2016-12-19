@@ -5,6 +5,7 @@ Shader "Snow/SnowMeshSimple"
 		_MainTex("Albedo", 2D) = "white" {}
 		_NormalMapTex("Normal Map", 2D) = "white" {}
 		_SnowColor("Snow Color", Color) = (1.0,1.0,1.0,1.0)
+		_SnowSpecularMapTex("Snow Specular Map", 2D) = "white" {}
 		_Wetness("Wetness", Range(0, 0.5)) = 0.3
 
 		_SnowDirection("Snow Direction", Vector) = (0,1,0)
@@ -18,6 +19,13 @@ Shader "Snow/SnowMeshSimple"
 
 		_SnowHeightMap("Snow Deformation Map", 2D) = "black" {}
 		_SnowAccumulationMap("Snow Accumulation Map", 2D) = "black" {}
+
+
+		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 1
+		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 1
+		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 1
+
+		_SnowSpecularNoiseTex("Snow Specular Noise", 2D) = "white" {}
 
 	}
 
@@ -87,6 +95,9 @@ Shader "Snow/SnowMeshSimple"
 			float _SnowCameraSize; 
 			float _SnowCameraZScale;
 
+			float _BlinnSpecularPower;
+			sampler2D _SnowSpecularNoiseTex;
+
 			v2f vert(appdata v)
 			{
 				v2f o;
@@ -138,7 +149,7 @@ Shader "Snow/SnowMeshSimple"
 				else
 				{
 					Delta = max(SnowMeshHeight - SnowDeformationHeight, 0);
-					if (SnowDeformationHeight > 0 && SnowDeformationHeight < _SnowCameraZScale)
+					if (Delta > 0)
 					{
 						//To modify vertex and add snow deformation to this object
 						positionWorldSpace.y -= Delta* _DeformationSacle;
@@ -147,6 +158,7 @@ Shader "Snow/SnowMeshSimple"
 					o.Delta.x = clamp(-Delta / (_SnowCameraZScale * 0.5), -0.5, 0);
 					o.Delta.z = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
 				}
+
 				if (SnowElevationHeight > 0)
 				{
 					positionWorldSpace.y += decodeElevation(SnowElevationHeight);
@@ -174,7 +186,8 @@ Shader "Snow/SnowMeshSimple"
 			{
 				fixed4 final;
 				// sample the texture
-				fixed4 textureCol = tex2D(_MainTex, i.uv.xy);
+				fixed4 snowShadeColor = tex2D(_MainTex, i.uv.xy);
+				float4 snowSpecularColor = tex2D(_SnowSpecularMapTex, i.uv);
 				
 				float3 N = normalize(i.normalWS);
 				float3 T = normalize(i.tangentWS);
@@ -190,13 +203,21 @@ Shader "Snow/SnowMeshSimple"
 				//float Alpha = dot(i.normalVS, _SnowDirection.xyz);
 				float difference = dot(normalWS, _SnowDirection.xyz);
 				//difference = saturate(difference / _Wetness);
-				final.rgb = difference*_SnowColor.rgb + (1 - difference) *textureCol.rgb;
+				final.rgb = difference*_SnowColor.rgb + (1 - difference) *snowShadeColor.rgb;
 				//final.rgb = i.normalVS;
 				//final.rgb = i.normalObject;
 				//final.rgb = dot(i.normalVS, i.normalObject);
 
 				float3 specColor = float3(1, 1, 1);
-				final = CalLighting(normalWS, i.positionWS, textureCol, specColor, 200);
+				final = CalLighting(normalWS, i.positionWS, snowShadeColor, specColor, 200);
+
+				final = CalLighting_OrenNayarBlinn(normalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
+
+				float SpecularNoise = sampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
+				if (SpecularNoise > 0)
+				{
+					col.rgb = 1;
+				}
 				//col.rgb = i.Delta.x/10;// i.Delta.y > 0.5 ? 0 : 1; //((i.Delta / 10) + 1) * 0.5;
 				//final.rgb = textureCol.xyz;
 				//final.rgb = i.normalWS;
