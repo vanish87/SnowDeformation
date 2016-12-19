@@ -224,7 +224,7 @@ float sampleNosie(sampler2D noise, float3 viewVector, float2 uv)
 	float sum = p1 + p2 + p3 + p4;
 	if (sum > _NoiseMin && sum < _NoiseMax)
 	{
-		return 1;
+		return sum / (_NoiseMax - _NoiseMin);
 	}
 	return 0;
 }

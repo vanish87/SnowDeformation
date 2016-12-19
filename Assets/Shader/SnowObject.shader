@@ -21,6 +21,10 @@
 		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 1
 		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 1
 		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 1
+
+		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
+		_NoiseMin("Min ", Float) = 2.5
+		_NoiseMax("Max", Float) = 2.51
 	}
 	SubShader
 	{
@@ -115,7 +119,7 @@
 				float4 snowShadeColor = tex2D(_SnowShadeMapTex, i.uv);
 				float4 snowSpecularColor = tex2D(_SnowSpecularMapTex, i.uv);
 
-				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.positionWS.xy);
+				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv);
 				//not used
 				float4 snowSpecularGlit = tex2D(_SnowSpecularGlitTex, i.uv);
 
@@ -123,7 +127,7 @@
 				col = CalLighting_OrenNayarBlinn(snowNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
 				if (SpecularNoise > 0)
 				{
-					col.rgb = 1;
+					col.rgb += 1 * ( SpecularNoise) ;
 				}
 				// sample texture and return it
 				//col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
