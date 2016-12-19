@@ -17,8 +17,10 @@
 		_SnowDirection("Snow Direction", Vector) = (0,1,0)
 		_SnowDepth("Snow Depth", Range(0,0.2)) = 0.1
 		_Wetness("Wetness", Range(0, 0.5)) = 0.3
-		_FrenalParameter("Frenal Parameter", Range(0, 0.5)) = 0.3
-		_FrenalBlending("Frenal Blending", Range(0, 1)) = 0.6
+
+		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 1
+		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 1
+		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 1
 	}
 	SubShader
 	{
@@ -61,11 +63,14 @@
 			float _SnowDepth;
 			float _Wetness;
 
+			float _BlinnSpecularPower;
+
 
 			v2f vert (appdata_full v)
 			{
 				v2f o;
 				float4 positionWorldSpace = mul(unity_ObjectToWorld, v.vertex);
+				//Object to world space is affine transform, the Inverse Transpose Matrix is equal to itself<=>(M-1)T = M
 				float4 normalWorldSpace   = mul(unity_ObjectToWorld, v.normal);
 				if (dot(normalWorldSpace, _SnowDirection.xyz) >= lerp(1, -1, (_Snow * 2) / 3))
 				{
@@ -108,17 +113,17 @@
 				float3 pos_eye = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);
 				float3 specColor = float3(1, 1, 1);
 				float4 snowShadeColor = tex2D(_SnowShadeMapTex, i.uv);
-
 				float4 snowSpecularColor = tex2D(_SnowSpecularMapTex, i.uv);
+
 				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.positionWS.xy);
+				//not used
 				float4 snowSpecularGlit = tex2D(_SnowSpecularGlitTex, i.uv);
 
-				//snowShadeColor = float4(0, 0, 0, 1);
-
-				col = CalLighting(snowNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, 50);
-				//if (snowSpecularGlit.r > 0.7)
+				float SpecularNoise = sampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
+				col = CalLighting_OrenNayarBlinn(snowNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
+				if (SpecularNoise > 0)
 				{
-					//col.rgb = glitter;
+					col.rgb = 1;
 				}
 				// sample texture and return it
 				//col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
