@@ -171,7 +171,7 @@ Shader "Snow/SnowMeshSimple"
 					//o.Delta.y = SnowElevationHeight * 5;
 				}		
 
-				//if (SnowElevationRatio > 0)
+				if (SnowElevationRatio > 0)
 				{
 					//normalWorldSpace.y *= 1 / o.Delta.y;
 					o.Delta.y = 1 - SnowElevationRatio;
