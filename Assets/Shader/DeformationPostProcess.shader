@@ -53,7 +53,7 @@ Shader "Snow/DeformationPostProcess" {
 			//r: deformationHeight; g: objectHeight; b: elevation
 			float4 frag(v2f i) : SV_Target{
 				float3 newInfo = tex2D(_NewDepthTex, i.uv.xy).rgb;
-				float3 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgb;
+				float4 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgba;
 				float currentElevation = decodeElevation(currentInfo.z);
 
 				float deformationHeight = newInfo.x;
@@ -62,6 +62,8 @@ Shader "Snow/DeformationPostProcess" {
 				//snow height = 0.5
 				float elevation = 0;
 				float snowHeight = 0.5;
+				float ratio = 0; float ElevationHeightScale = 0;
+				float maxheight = 1;
 				//check if this pixel is a trail pixel, trail pixel should calculate elevation
 				if (deformationHeight < 1 && objectHeight < 1 &&
 					deformationHeight > snowHeight && 
@@ -71,18 +73,25 @@ Shader "Snow/DeformationPostProcess" {
 					float elevationDistance = getElevation(snowHeight, objectHeight, deformationHeight);
 
 					//the deeper an oject got into snow, the greater ElevationHeightScale it produces.
-					float ElevationHeightScale = snowHeight - objectHeight;
-					float ratio = elevationDistance / ElevationHeightScale;
+					ElevationHeightScale = snowHeight - objectHeight;
+					ratio = elevationDistance / ElevationHeightScale;
 					float height = ElevationHeightScale * _ArtistScale;
 
 					//0.7 = sqrt(2) * 0.5;
 					//this equation should have two roots, one is (0,0), another is (sqrt(2), 0) and the vertex is (sqrt(2)/2, 1)
-					elevation = (-2 * pow((ratio - 0.7), 2) + 1) * height;					
+					elevation = (-2 * pow((ratio - 0.7), 2) + 1) * height;
+					if (elevation > 0)
+						maxheight = ratio > 0.7 ? (ratio ) / 1.4 : 0;
+					else
+						maxheight = 1;
+					//maxheight = maxheight>0.5 ? 1 : 0;
 				}
+				maxheight = min(currentInfo.a, maxheight);
 				//if it has current deformation, then do not make trials
 				if (currentInfo.x < snowHeight)
 				{
 					elevation = 0;
+					maxheight = 0;
 				}
 				//if it has current elevation, then make a greater one
 				else if (currentElevation < ElevationScale)
@@ -93,7 +102,7 @@ Shader "Snow/DeformationPostProcess" {
 				//update current deformation info too
 				bool hasNewDepth = newInfo.x < currentInfo.x;
 				float2 ret = hasNewDepth ? newInfo : currentInfo;
-				return float4(ret, encodeElevation(elevation), 0);
+				return float4(ret, encodeElevation(elevation), maxheight);
 			}
 			ENDCG
 		}	

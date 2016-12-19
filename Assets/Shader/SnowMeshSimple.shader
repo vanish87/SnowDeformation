@@ -119,6 +119,7 @@ Shader "Snow/SnowMeshSimple"
 				float  SnowDeformationHeight = SnowDeformationInfo.r * _SnowCameraZScale;
 				float  SnowObjectHeight = SnowDeformationInfo.g;
 				float  SnowElevationHeight = SnowDeformationInfo.b;
+				float  SnowElevationRatio = SnowDeformationInfo.a;
 
 				float SnowAccumulationHeight  = SnowAccumulationInfo.a * _SnowCameraZScale;
 				float3 SnowAccumulationNormal = (SnowAccumulationInfo.rgb * 2) - 1;
@@ -159,18 +160,24 @@ Shader "Snow/SnowMeshSimple"
 						positionWorldSpace.y -= Delta* _DeformationSacle;
 					}
 
-					o.Delta.x = clamp(-Delta / (_SnowCameraZScale * 0.5), -0.5, 0);
+					o.Delta.x = clamp(-Delta*2 / (_SnowCameraZScale * 0.5), -0.5, 0);
 					o.Delta.z = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
 				}
 
 				if (SnowElevationHeight > 0)
 				{
 					positionWorldSpace.y += decodeElevation(SnowElevationHeight);
+					//o.Delta.x = clamp(SnowElevationHeight*2, 0, 0.5);
+					//o.Delta.y = SnowElevationHeight * 5;
+				}		
+
+				//if (SnowElevationRatio > 0)
+				{
+					//normalWorldSpace.y *= 1 / o.Delta.y;
+					o.Delta.y = 1 - SnowElevationRatio;
+					//o.Delta.y *= SnowElevationHeight * 20;
 				}
 
-				//positionWorldSpace.y = SnowAccumulationHeight;
-
-				o.Delta.y = SnowAccumulationInfo.a;
 
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
@@ -200,7 +207,7 @@ Shader "Snow/SnowMeshSimple"
 				float4 normalTS = tex2D(_NormalMapTex, i.uv * 100);
 				float3 normalWS = mul(normalize(UnpackNormal(normalTS)), TtoW);
 				//normalWS = i.normalWS;
-				normalWS.y *= 10;
+				//normalWS.y *= 10;
 				normalWS = normalize(normalWS);
 
 				//col = tex2D(_SnowAccumulationMap, float2(i.uv.x, i.uv.y)).rgba;
@@ -232,8 +239,23 @@ Shader "Snow/SnowMeshSimple"
 				float ColorScale = 1;
 				ColorScale += i.Delta.x;
 				final.rgb *= ColorScale;
+
+				if (i.Delta.y > 0.3 && i.Delta.y < 0.7)
+				{
+					//final.rgb *= clamp((i.Delta.y-0.1) / 0.3, 0, 1);
+					float x = (i.Delta.y - 0.3) / 0.4;
+					x = 0.9 + (x*0.1);
+					final.rgb *= x;
+				}
+				else
+				if(i.Delta.y > 0 && i.Delta.y < 0.3)
+				{
+					float x = (0.3 - i.Delta.y) / 0.3;
+					x = 0.9 + (0.1 * x);
+					final.rgb *= x;
+				}
+				//final.rgb *= (cos(4 * PI*i.Delta.y) + 1.25) *0.5;
 				//final.a = i.Delta.z * 3;
-				//final.rgb = i.Delta.y;
 				//final.a = (1 - i.normalWS.y)>0.1 ? 1 : 0;
 				return final;
 			}
