@@ -27,6 +27,9 @@ Shader "Snow/SnowMeshSimple"
 
 		_SnowSpecularNoiseTex("Snow Specular Noise", 2D) = "white" {}
 
+		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
+			_NoiseMin("Min ", Float) = 2.5
+			_NoiseMax("Max", Float) = 2.5001
 	}
 
 	SubShader
@@ -97,6 +100,7 @@ Shader "Snow/SnowMeshSimple"
 
 			float _BlinnSpecularPower;
 			sampler2D _SnowSpecularNoiseTex;
+			sampler2D _SnowSpecularMapTex;
 
 			v2f vert(appdata v)
 			{
@@ -193,9 +197,11 @@ Shader "Snow/SnowMeshSimple"
 				float3 T = normalize(i.tangentWS);
 				float3 B = cross(N, T);
 				float3x3 TtoW = float3x3(T, B, N);
-				float4 normalTS = tex2D(_NormalMapTex, i.uv);
+				float4 normalTS = tex2D(_NormalMapTex, i.uv * 100);
 				float3 normalWS = mul(normalize(UnpackNormal(normalTS)), TtoW);
-				normalWS = i.normalWS;
+				//normalWS = i.normalWS;
+				normalWS.y *= 10;
+				normalWS = normalize(normalWS);
 
 				//col = tex2D(_SnowAccumulationMap, float2(i.uv.x, i.uv.y)).rgba;
 				//float4 positionSnowCamera = mul(_SnowCameraMatrix, i.positionWS);
@@ -208,6 +214,7 @@ Shader "Snow/SnowMeshSimple"
 				//final.rgb = i.normalObject;
 				//final.rgb = dot(i.normalVS, i.normalObject);
 
+				float3 pos_eye = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);
 				float3 specColor = float3(1, 1, 1);
 				final = CalLighting(normalWS, i.positionWS, snowShadeColor, specColor, 200);
 
@@ -216,7 +223,7 @@ Shader "Snow/SnowMeshSimple"
 				float SpecularNoise = sampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
 				if (SpecularNoise > 0)
 				{
-					col.rgb = 1;
+					final.rgb = 0.8;
 				}
 				//col.rgb = i.Delta.x/10;// i.Delta.y > 0.5 ? 0 : 1; //((i.Delta / 10) + 1) * 0.5;
 				//final.rgb = textureCol.xyz;

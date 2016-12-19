@@ -119,7 +119,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 
 	//diffuse term is OrenNayar model
 	float3 diffuse = diffuseAlbedo * OrenNayar(lightDir, viewDir, normal, roughness, albedo);
-	diffuse *= (1.0f -  (specularAlbedo * fresnel));
+	//diffuse *= (1.0f -  (specularAlbedo * fresnel));
 
 	//specular term is BlinnPhong model
 	float3 specular = specularAlbedo * CalBlinnPhong(normal, viewDir, lightDir, false, specularPower);
