@@ -155,7 +155,7 @@ float SampleNosie(sampler2D noise, float3 viewVector, float2 uv)
 	{
 		return sum / (_NoiseMax - _NoiseMin);
 	}
-	return 1;
+	return 0;
 }
 
 float3 BlendNormal(float3 n1, float3 n2)

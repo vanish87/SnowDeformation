@@ -91,12 +91,15 @@
 
 				float3 objectNormalWS =  normalize(mul(float4(normalDir,0), TtoW));
 
+				//objectNormalWS = N;
+
 				half difference = dot(objectNormalWS, _SnowDirection.xyz) - lerp(1, -1, _Snow);
 				difference = saturate(difference / _Wetness);
+				//difference *= _Snow;
 
 				col = tex2D(_MainTex, i.uv.xy);
 				//combines snow color with object color
-				float4 snowShadeColor = difference * col + ((1 - difference) *tex2D(_SnowShadeMapTex, i.uv));
+				float4 snowShadeColor = ((1-difference) * col) + (difference *tex2D(_SnowShadeMapTex, i.uv));
 
 				float4 snowSpecularColor = tex2D(_SnowSpecularMapTex, i.uv);
 				//not used
@@ -107,7 +110,10 @@
 				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv);
 				float3 viewDir = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);
 				float SpecularNoise = SampleNosie(_SnowSpecularNoiseTex, viewDir, i.uv);
-				col.rgb *= SpecularNoise + 0.5;
+				if (SpecularNoise > 0 && difference > 0.99)
+				{
+					col.rgb *= SpecularNoise + 0.5;
+				}
 				// sample texture and return it
 				//col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
 
