@@ -36,44 +36,6 @@ float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, fl
 	return albedo * (cos_theta.x * (oren_nayar.x + oren_nayar.y * diffuse_oren_nayar));
 }
 
-float3 OrenNayar1(float3 lightDir, float3 viewDir, float3 normal, float sigma, float3 albedo)
-{
-	float sigma2 = sigma*sigma;
-	float VdotN = dot(viewDir, normal);
-	float LdotN = dot(lightDir, normal);
-	float cos_theta_i = LdotN;
-	float theta_r = acos(VdotN);
-	float theta_i = acos(cos_theta_i);
-	float cos_phi_diff = dot(normalize(viewDir-normal*VdotN), normalize(lightDir-normal*LdotN));
-	float alpha = max(theta_i, theta_r);
-	float beta = min(theta_i, theta_r);
-	float A = 1.0 - 0.5 * sigma2 / (sigma2 + 0.33);
-	float B = 0.45 * sigma2 / (sigma2 + 0.09);
-
-	if (cos_phi_diff >= 0)
-		B *= sin(alpha) * tan(beta);
-	else
-		B *= 0;
-
-	return albedo * (cos_theta_i * (A+B));
-}
-
-float SchlickFresnel(float R0, float3 positionWS, float3 normalWS)
-{
-	float3 I = normalize(_WorldSpaceCameraPos - positionWS);
-	float NdotI = max(0, dot(I, normalWS));
-	float ReflectionCoefficient = R0 + ((1 - R0) * pow(1 - NdotI, 5));
-	return ReflectionCoefficient;
-}
-
-float4 CalFresnal(float4 ColorFresnel, float4 ColorReflection, float3 PositionWS, float3 NormalWS)
-{
-	float4 FinalColor;
-	float reflectionFactor = SchlickFresnel(_FrenalParameter, PositionWS, NormalWS);
-	FinalColor = lerp(ColorReflection, ColorFresnel, reflectionFactor * _FrenalBlending);
-	return FinalColor;
-}
-
 float SchlickFresnelWithN(float n, float3 halfVec, float3 viewDir/*or LightDir*/)
 {
 	float3 FresnelFactor = pow((1 - n) / (1 + n), 2);	
@@ -128,7 +90,6 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float3 lightDir = normalize(float3(1, 1, 0));// normalize(_WorldSpaceLightPos0.xyz);
 	normal = normalize(normal);
 
-
 	float4 ambient = float4(0.1f, 0.1f, 0.1f, 1.0f);
 	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -151,7 +112,6 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 
 	//specular term is BlinnPhong model
 	float3 specular = specularAlbedo * CalBlinnPhong(normal, viewDir, lightDir, false, specularPower);
-	//specular = BlinnPhongDistribution(normal, halfVec, 500);
 	//they are combined with fresnel term
 	specular *= fresnel;
 
@@ -195,5 +155,12 @@ float SampleNosie(sampler2D noise, float3 viewVector, float2 uv)
 	{
 		return sum / (_NoiseMax - _NoiseMin);
 	}
-	return 0;
+	return 1;
+}
+
+float3 BlendNormal(float3 n1, float3 n2)
+{
+	//UDN blending
+	float3 r = normalize(float3(n1.xy + n2.xy, n1.z));
+	return r;
 }
