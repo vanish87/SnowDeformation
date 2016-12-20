@@ -18,9 +18,9 @@
 		_SnowDepth("Snow Depth", Range(0,0.2)) = 0.1
 		_Wetness("Wetness", Range(0, 0.5)) = 0.3
 
-		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 1
+		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 3
 		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 1
-		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 1
+		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 30
 
 		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
 		_NoiseMin("Min ", Float) = 2.5
@@ -107,7 +107,7 @@
 
 				float3 snowNormalWS = normalDirection;
 				//snowNormalWS.y += snowSpecularNoise.r;
-				//snowNormalWS = i.normalWS;
+				snowNormalWS = i.normalWS;
 
 				half difference = dot(snowNormalWS, _SnowDirection.xyz) - lerp(1, -1, _Snow);
 				difference = saturate(difference / _Wetness);
@@ -123,7 +123,7 @@
 				//not used
 				float4 snowSpecularGlit = tex2D(_SnowSpecularGlitTex, i.uv);
 
-				float SpecularNoise = sampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
+				float SpecularNoise = SampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
 				col = CalLighting_OrenNayarBlinn(snowNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
 				if (SpecularNoise > 0)
 				{
