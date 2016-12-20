@@ -91,11 +91,9 @@
 
 				float3 objectNormalWS =  normalize(mul(float4(normalDir,0), TtoW));
 
-				//objectNormalWS = N;
 
 				half difference = dot(objectNormalWS, _SnowDirection.xyz) - lerp(1, -1, _Snow);
 				difference = saturate(difference / _Wetness);
-				//difference *= _Snow;
 
 				col = tex2D(_MainTex, i.uv.xy);
 				//combines snow color with object color
@@ -114,13 +112,6 @@
 				{
 					col.rgb *= SpecularNoise + 0.5;
 				}
-				// sample texture and return it
-				//col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
-
-				//float depthValue = abs(i.vertex.z);
-				//col.a	= depthValue;
-				//col.rgb = normalize(i.normalWS.xyz);
-				//col.rgb = normalWS;
 				return col;
 			}
 			ENDCG

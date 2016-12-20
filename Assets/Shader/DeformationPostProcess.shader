@@ -63,7 +63,7 @@ Shader "Snow/DeformationPostProcess" {
 
 				//snow height = 0.5
 				float elevation = 0;
-				snowHeight = snowHeight < 1? 1 - snowHeight: 0.5;
+				snowHeight = 0.5;// snowHeight < 1 ? 1 - snowHeight : 0.5;
 				float ratio = 0; float ElevationHeightScale = 0;
 				float maxheight = 1;
 				//check if this pixel is a trail pixel, trail pixel should calculate elevation

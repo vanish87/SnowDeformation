@@ -90,7 +90,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float3 lightDir = normalize(float3(1, 1, 0));// normalize(_WorldSpaceLightPos0.xyz);
 	normal = normalize(normal);
 
-	float4 ambient = float4(0.1f, 0.1f, 0.1f, 1.0f);
+	float4 ambient = float4(0.2f, 0.2f, 0.2f, 1.0f);
 	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	float roughness = _Roughness;

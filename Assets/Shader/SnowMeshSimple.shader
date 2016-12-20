@@ -192,10 +192,10 @@ Shader "Snow/SnowMeshSimple"
 				float3 T = normalize(i.tangentWS);
 				float3 B = cross(N, T);
 				float3x3 TtoW = float3x3(T, B, N);
-				float4 normalTS = tex2D(_NormalMapTex, i.uv * 100);
+				float4 normalTS = tex2D(_NormalMapTex, i.uv);
 				float3 normalWS = mul(normalize(UnpackNormal(normalTS)), TtoW);
 				//normalWS = i.normalWS;
-				//normalWS.y *= 10;
+
 				normalWS = normalize(normalWS);
 
 				//col = tex2D(_SnowAccumulationMap, float2(i.uv.x, i.uv.y)).rgba;
@@ -210,19 +210,16 @@ Shader "Snow/SnowMeshSimple"
 				//final.rgb = dot(i.normalVS, i.normalObject);
 
 				float3 pos_eye = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);
-				float3 specColor = float3(0.7, 0.97, 1);
+				//snowSpecularColor = float4(0, 0, 1,1);
 				//snowShadeColor = float4(1, 1, 1, 1);
 				final = CalLighting_OrenNayarBlinn(normalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
 
 				float SpecularNoise = SampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
 				if (SpecularNoise > 0)
 				{
-					final.rgb = 0.8;
+					final.rgb = 1;
 				}
-				//col.rgb = i.Delta.x/10;// i.Delta.y > 0.5 ? 0 : 1; //((i.Delta / 10) + 1) * 0.5;
-				//final.rgb = textureCol.xyz;
-				//final.rgb = i.normalWS;
-				//final.rgb = i.Delta.x;
+
 				float ColorScale = 1;
 				ColorScale += i.Delta.x;
 				final.rgb *= ColorScale;
