@@ -20,8 +20,7 @@ public class MeshGeneration : MonoBehaviour {
     public Texture2D MeshHeightMapCPU = null;
     private RenderTexture MeshHeightMap = null;
     // Use this for initialization
-
-    SnowMesh newmesh;
+    
     void Start()
     {
         if (snowAccumulationMapCamera == null)
@@ -37,9 +36,7 @@ public class MeshGeneration : MonoBehaviour {
             MeshHeightMapCPU = new Texture2D(MeshHeightMap.width, MeshHeightMap.height, TextureFormat.ARGB32, true);
             MeshHeightMapCPU.name = "MeshHeightMapCPU";
         }
-
         Generate();
-        //CreateNewMesh();
     }
 
     public void Generate(bool usingHeightMap = false)
@@ -62,7 +59,7 @@ public class MeshGeneration : MonoBehaviour {
                 float heightNoise = 0;
                 if (usingHeightMap)
                 {
-                    heightNoise = GetHeightValue(x, y);
+                    heightNoise = 0.5f - GetHeightValue(x, y);
                 }
                 else
                 {
@@ -93,136 +90,13 @@ public class MeshGeneration : MonoBehaviour {
         mesh.RecalculateNormals();
     }
 
-    void ReGenerateMesh()
-    {
-        
-        Vector3[] Temp = vertices;
-        for (int i = 0, y = 0; y <= ySize; y++)
-        {
-            for (int x = 0; x <= xSize; x++, i++)
-            {
-                int PixelX = (int)(x * 1.0 / xSize * MeshHeightMap.width);
-                int PixelY = (int)(y * 1.0 / xSize * MeshHeightMap.width);
-                float PixelValue = MeshHeightMapCPU.GetPixel(PixelX, PixelY).a;
-                if(PixelValue > 0)
-                {
-                    float height = (1 - PixelValue) * 25;
-                    Temp[i].x = x - (xSize / 2);
-                    Temp[i].y = height;
-                    Temp[i].z = y - (ySize / 2);
-                }
-                else
-                {
-                    float heightNoise = Mathf.PerlinNoise((float)y / (xSize) * NoiseScale, (float)x / (ySize) * NoiseScale);
-                    Temp[i].y = heightNoise * NoiseHeightScale;
-                }
-            }
-        }
-        mesh.vertices = Temp;
-        mesh.RecalculateBounds();
-        mesh.RecalculateNormals();
-    }
-
-    int GetHeightLevel(float Height)
-    {
-        int Ret = -1;
-        if (Height > 0)
-        {
-            Ret = (int)(Height * 25);
-        }
-        return Ret;
-    }
-
     float GetHeightValue(int x, int y)
     {
         int PixelX = (int)(x * 1.0 / xSize * MeshHeightMap.width);
         int PixelY = (int)(y * 1.0 / ySize * MeshHeightMap.height);
         return MeshHeightMapCPU.GetPixel(PixelX, PixelY).a;
     }
-
-    void IsContinuous(Vector3 VertexIndex, Vector2 Direction)
-    {
-        //float OrgValue = GetHeightValue(VertexIndex);
-        for (int i = 1; i < 3; ++i)
-        {
-            
-        }
-    }
-
-    void FillValueWithDFS(int[,] Grid, int[] Index, int Value)
-    {
-        //if(Index[0] >=0 && Index[1] >=0 && Index[0]< xSize && Index[1] < ySize)
-        if (Grid[Index[0], Index[1]] < 100 && Grid[Index[0], Index[1]] > -1)
-        {
-            Grid[Index[0], Index[1]] = Value;
-            int[] NewIndex = { Index[0] + 1, Index[1] };
-            if(NewIndex[0] < xSize - 1)
-            {
-                FillValueWithDFS(Grid, NewIndex, Value);
-            }
-
-            if (Index[1] < ySize - 1)
-            {
-                NewIndex[0] = Index[0];
-                NewIndex[1] = Index[1] + 1;
-                FillValueWithDFS(Grid, NewIndex, Value);
-            }
-
-            if (Index[0] > 0)
-            {
-                NewIndex[0] = Index[0] - 1;
-                NewIndex[1] = Index[1];
-                FillValueWithDFS(Grid, NewIndex, Value);
-            }
-        }
-    }
-    int[,] HeighGrid;
-    void FillHeightGrid()
-    {
-        int[] Index = { 0, 0 };
-        int BaseObjectID = 100;
-        int CurrentMeshID = BaseObjectID;
-        HeighGrid = new int[xSize, ySize];
-
-        for (int y = 0; y < ySize; y++)
-        {
-            for (int x = 0; x < xSize; x++)
-            {
-                HeighGrid[x, y] = GetHeightLevel(GetHeightValue(x, y));
-            }
-        }
-
-        for (int y = 0; y < ySize; y++)
-        {
-            for (int x = 0; x < xSize; x++)
-            {
-                if (HeighGrid[x,y] != -1 && HeighGrid[x, y] < BaseObjectID)
-                {
-                    int[] NewIndex = { x, y };
-                    FillValueWithDFS(HeighGrid, NewIndex, CurrentMeshID++);
-                }
-            }
-        }
-    }
-    SnowMesh NewMesh;
-    public void CreateNewMesh()
-    {
-        NewMesh = new SnowMesh();        
-
-        for (int i = 0, y = 0; y <= ySize; y++)
-        {
-            for (int x = 0; x <= xSize; x++, i++)
-            {
-                float heightNoise = Mathf.PerlinNoise((float)y / (xSize) * NoiseScale, (float)x / (ySize) * NoiseScale);
-                //NewMesh.Triangle[i] = xSize * y + x;
-                NewMesh.AddVertex(new Vector3(x - (xSize / 2), heightNoise * NoiseHeightScale, y - (ySize / 2)));
-            }
-        }
-
-        NewMesh.GenerateNewMesh();
-        GetComponent<MeshFilter>().mesh = mesh = NewMesh.Mesh;
-        
-    }
+    
     // Update is called once per frame
     void Update () {
         if (MeshHeightMap == null)

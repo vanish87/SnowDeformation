@@ -2,34 +2,30 @@ Shader "Snow/SnowMeshSimple"
 {
 	Properties
 	{
-		_MainTex("Albedo", 2D) = "white" {}
-		_NormalMapTex("Normal Map", 2D) = "white" {}
-		_SnowColor("Snow Color", Color) = (1.0,1.0,1.0,1.0)
+		_MainTex("Snow Albedo", 2D) = "white" {}
+		_NormalMapTex("Snow Normal Map", 2D) = "white" {}
 		_SnowSpecularMapTex("Snow Specular Map", 2D) = "white" {}
+		_SnowSpecularNoiseTex("Snow Specular Noise", 2D) = "white" {}
 		_Wetness("Wetness", Range(0, 0.5)) = 0.3
 
 		_SnowDirection("Snow Direction", Vector) = (0,1,0)
-		_SnowHeight("Snow Height", Range(0, 10)) = 1
 		_Snow("Snow Level", Range(0,1)) = 0
 		_SticknessCos("Stickness Value", Range(0, 1)) = 0.4
 		_AccumulationSacle("Accumulation Sacle", Vector) = (0,1,0, 0)
 
 		_DeformationSacle("Deformation Sacle", Range(0, 10)) = 1
-		_MaxHeightDelta("Max Height Delta", Range(3, 100)) = 20
 
 		_SnowHeightMap("Snow Deformation Map", 2D) = "black" {}
 		_SnowAccumulationMap("Snow Accumulation Map", 2D) = "black" {}
-
 
 		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 3
 		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 1
 		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 30
 
-		_SnowSpecularNoiseTex("Snow Specular Noise", 2D) = "white" {}
 
 		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
-			_NoiseMin("Min ", Float) = 2.5
-			_NoiseMax("Max", Float) = 2.5001
+		_NoiseMin("Min ", Float) = 2.5
+		_NoiseMax("Max", Float) = 2.5001
 	}
 
 	SubShader
@@ -76,31 +72,23 @@ Shader "Snow/SnowMeshSimple"
 				float3 Delta		: TEXCOORD1;//x is accumulation height delta/deformation height delta; z is alpha difference
 			};
 
+
+			#include "SnowSharedProperty.cginc"
 			sampler2D _MainTex;
 			sampler2D _NormalMapTex;
 			sampler2D _SnowHeightMap;
 			sampler2D _SnowAccumulationMap;
+
 			float4 _MainTex_ST;
-			float4 _SnowDirection;
 			float4 _AccumulationSacle;
-			float4 _SnowColor;
-			float _Snow;
-			float _SnowHeight;
 			float _DeformationSacle;
-			float _Wetness;
-
 			float _SticknessCos;
-
-			float _MaxHeightDelta;
-
+			
 			float4x4 _SnowCameraMatrix;
 			float4x4 _SnowAccumulationCameraMatrix;
 			float _SnowCameraSize; 
 			float _SnowCameraZScale;
 
-			float _BlinnSpecularPower;
-			sampler2D _SnowSpecularNoiseTex;
-			sampler2D _SnowSpecularMapTex;
 
 			v2f vert(appdata v)
 			{
@@ -137,7 +125,7 @@ Shader "Snow/SnowMeshSimple"
 					float SnowDifference = dot(SnowAccumulationNormal, _SnowDirection);
 					if (SnowDifference>  _SticknessCos)
 					{
-						positionWorldSpace.y += SnowMeshHeight*0.5+(Delta* _SnowHeight);
+						positionWorldSpace.y += SnowMeshHeight*0.5+(Delta);
 						positionWorldSpace.xyz += SnowAccumulationNormal.xyz * _AccumulationSacle.xyz * _SnowDirection;
 					}
 
@@ -216,7 +204,7 @@ Shader "Snow/SnowMeshSimple"
 				//float Alpha = dot(i.normalVS, _SnowDirection.xyz);
 				float difference = dot(normalWS, _SnowDirection.xyz);
 				//difference = saturate(difference / _Wetness);
-				final.rgb = difference*_SnowColor.rgb + (1 - difference) *snowShadeColor.rgb;
+				//final.rgb = difference*_SnowColor.rgb + (1 - difference) *snowShadeColor.rgb;
 				//final.rgb = i.normalVS;
 				//final.rgb = i.normalObject;
 				//final.rgb = dot(i.normalVS, i.normalObject);

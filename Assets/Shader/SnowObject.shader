@@ -2,25 +2,23 @@
 {
 	Properties
 	{
-		_MainTex("Albedo", 2D) = "white" {}
+		_MainTex("Object Albedo", 2D) = "white" {}
+		_NormalMapTex("Normal Map", 2D) = "white" {}
+
 		_SnowShadeMapTex("Snow Shade Map", 2D) = "white" {}
 		_SnowNormalMapTex("Snow Normal Map", 2D) = "white" {}
 		_SnowSpecularMapTex("Snow Specular Map", 2D) = "white" {}
 		_SnowSpecularNoiseTex("Snow Specular Noise", 2D) = "white" {}
 		_SnowSpecularGlitTex("Snow Specular glit", 2D) = "white" {}
 
-		_NormalMapTex("Normal Map", 2D) = "white" {}
-
-
 		_Snow("Snow Level", Range(0,1)) = 0
-		_SnowColor("Snow Color", Color) = (1.0,1.0,1.0,1.0)
 		_SnowDirection("Snow Direction", Vector) = (0,1,0)
 		_SnowDepth("Snow Depth", Range(0,0.2)) = 0.1
 		_Wetness("Wetness", Range(0, 0.5)) = 0.3
 
-		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 3
-		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 1
-		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 30
+		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 2
+		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 0.3
+		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 5
 
 		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
 		_NoiseMin("Min ", Float) = 2.5
@@ -52,22 +50,10 @@
 				float3 bitangentWS	: TEXCOORD5;
 			};
 	
+
+			#include "SnowSharedProperty.cginc"
 			sampler2D _MainTex;
 			sampler2D _NormalMapTex;
-			sampler2D _SnowShadeMapTex;
-			sampler2D _SnowNormalMapTex;
-			sampler2D _SnowSpecularMapTex;
-			sampler2D _SnowSpecularNoiseTex;
-			sampler2D _SnowSpecularGlitTex;
-
-
-			float _Snow;
-			float4 _SnowColor;
-			float4 _SnowDirection;
-			float _SnowDepth;
-			float _Wetness;
-
-			float _BlinnSpecularPower;
 
 
 			v2f vert (appdata_full v)
@@ -92,43 +78,36 @@
 
 			float4 frag (v2f i) : SV_Target
 			{
-				float4 col;
+				float4 col = float4(0,0,0,1);
 
 				float3 N = normalize(i.normalWS);
 				float3 T = normalize(i.tangentWS);
 				float3 B = normalize(i.bitangentWS);// cross(N, T);
 				float3x3 TtoW = float3x3(T, B, N);
 
+				float3 normalDir = normalize(UnpackNormal(tex2D(_NormalMapTex, i.uv)));
+				float3 snowNormal = normalize(UnpackNormal(tex2D(_SnowNormalMapTex, i.uv)));
+				normalDir = BlendNormal(normalDir, snowNormal);
 
-				float4 normalMap = tex2D(_SnowNormalMapTex, i.uv * 100);
-				float3 normalDir = normalize(UnpackNormal(normalMap));
+				float3 objectNormalWS =  normalize(mul(float4(normalDir,0), TtoW));
 
-				float3 normalDirection =  normalize(mul(float4(normalDir,0), TtoW));
-
-				float3 snowNormalWS = normalDirection;
-				//snowNormalWS.y += snowSpecularNoise.r;
-				snowNormalWS = i.normalWS;
-
-				half difference = dot(snowNormalWS, _SnowDirection.xyz) - lerp(1, -1, _Snow);
+				half difference = dot(objectNormalWS, _SnowDirection.xyz) - lerp(1, -1, _Snow);
 				difference = saturate(difference / _Wetness);
 
 				col = tex2D(_MainTex, i.uv.xy);
+				//combines snow color with object color
+				float4 snowShadeColor = difference * col + ((1 - difference) *tex2D(_SnowShadeMapTex, i.uv));
 
-				float3 pos_eye = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);
-				float3 specColor = float3(1, 1, 1);
-				float4 snowShadeColor = tex2D(_SnowShadeMapTex, i.uv);
 				float4 snowSpecularColor = tex2D(_SnowSpecularMapTex, i.uv);
-
-				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv);
 				//not used
 				float4 snowSpecularGlit = tex2D(_SnowSpecularGlitTex, i.uv);
 
-				float SpecularNoise = SampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
-				col = CalLighting_OrenNayarBlinn(snowNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
-				if (SpecularNoise > 0)
-				{
-					col.rgb += 1 * ( SpecularNoise) ;
-				}
+				col = CalLighting_OrenNayarBlinn(objectNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
+
+				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv);
+				float3 viewDir = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);
+				float SpecularNoise = SampleNosie(_SnowSpecularNoiseTex, viewDir, i.uv);
+				col.rgb *= SpecularNoise + 0.5;
 				// sample texture and return it
 				//col.rgb = difference*_SnowColor.rgb*snowShadeColor.rgb + (1 - difference) *col;
 

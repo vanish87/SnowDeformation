@@ -20,6 +20,8 @@ public class SnowDeformationCameraScript : MonoBehaviour
     public RenderTexture currentSnowHeight;
     public Texture2D currentSnowHeightCPU;
 
+    public Camera snowAccumulationMapCamera;
+    public RenderTexture AccumulationTex;
 
     [Range(0, 20F)]
     public float artistScale = 1.0F;
@@ -51,6 +53,11 @@ public class SnowDeformationCameraScript : MonoBehaviour
         //depthCamera.SetTargetBuffers(snowHeightTex.colorBuffer, snowHeightTex.depthBuffer);
         depthCamera.targetTexture = snowHeightTex;
 
+        snowAccumulationMapCamera = GameObject.Find("SnowAccumulationCamera").GetComponent<Camera>();
+        if(AccumulationTex == null)
+        {
+            AccumulationTex = snowAccumulationMapCamera.GetComponent<SnowAccumulationCameraScript>().snowNormalsAndHeightTex;
+        }
 
         currentSnowHeightCPU = new Texture2D(currentSnowHeight.width, currentSnowHeight.height, TextureFormat.ARGB32, true);
 
@@ -74,6 +81,7 @@ public class SnowDeformationCameraScript : MonoBehaviour
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         material.SetTexture("_CurrentDepthTexture", currentSnowHeight);
+        material.SetTexture("_CurrentAccumulationTexture", AccumulationTex);
         material.SetTexture("_NewDepthTex", source);
         material.SetFloat("_DeltaTime", Time.deltaTime);
         material.SetFloat("_ArtistScale", artistScale);

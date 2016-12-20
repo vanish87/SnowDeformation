@@ -24,6 +24,7 @@ Shader "Snow/DeformationPostProcess" {
 
 			sampler2D _NewDepthTex;// source texture
 			sampler2D _CurrentDepthTexture;
+			sampler2D _CurrentAccumulationTexture;
 
 			float _DeltaTime;
 			float _RecoverSpeed;
@@ -54,6 +55,7 @@ Shader "Snow/DeformationPostProcess" {
 			float4 frag(v2f i) : SV_Target{
 				float3 newInfo = tex2D(_NewDepthTex, i.uv.xy).rgb;
 				float4 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgba;
+				float snowHeight = tex2D(_CurrentAccumulationTexture, i.uv.xy).a;
 				float currentElevation = decodeElevation(currentInfo.z);
 
 				float deformationHeight = newInfo.x;
@@ -61,7 +63,7 @@ Shader "Snow/DeformationPostProcess" {
 
 				//snow height = 0.5
 				float elevation = 0;
-				float snowHeight = 0.5;
+				snowHeight = snowHeight < 1? 1 - snowHeight: 0.5;
 				float ratio = 0; float ElevationHeightScale = 0;
 				float maxheight = 1;
 				//check if this pixel is a trail pixel, trail pixel should calculate elevation
