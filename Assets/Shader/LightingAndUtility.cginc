@@ -11,6 +11,7 @@ static float4 _Offset = float4(0.005, -0.006, 0.007, 0.008);
 
 float _Roughness = 1;
 float _RefractiveIndex = 1;
+float _ArtistElevationScale = 1;
 
 //http://mimosa-pudica.net/improved-oren-nayar.html
 //http://shaderjvo.blogspot.jp/2011/08/van-ouwerkerks-rewrite-of-oren-nayar.html
@@ -163,4 +164,44 @@ float3 BlendNormal(float3 n1, float3 n2)
 	//UDN blending
 	float3 r = normalize(float3(n1.xy + n2.xy, n1.z));
 	return r;
+}
+
+//deformationHeight in deformation camera space and normalize to [0,1]
+//elevationHeight is reletive to snow height
+float4 UpdateSnowInfo(float4 currentInfo, float4 newInfo)
+{
+	float deformationHeight= min(currentInfo.x, newInfo.x);
+	float elevationHeight  = max(currentInfo.y, newInfo.y);
+
+	float4 ret = float4(0, 0, 0, 0);
+	ret.r = deformationHeight;
+	ret.g = elevationHeight;
+
+	return ret;
+}
+
+float getElevationDistance(float currentSnowHeight, float currentObjectHeight, float deformationHeight)
+{
+	float depressinDis = sqrt(currentSnowHeight - currentObjectHeight);
+	float distanceFromFoot = sqrt(deformationHeight - currentObjectHeight);
+	float elevationDistance = distanceFromFoot - depressinDis;
+	return elevationDistance;
+}
+
+float CalculateElevation(float snowHeight, float objectHeight, float deformationHeight)
+{
+	float elevation = 0;
+	//this object is above snow or is deformation pixel, early return
+	if (snowHeight < objectHeight || deformationHeight < objectHeight) return elevation;
+
+	float elevationDistance = getElevationDistance(snowHeight, objectHeight, deformationHeight);
+
+	float ElevationHeightScale = snowHeight - objectHeight;
+	float ratio = elevationDistance / ElevationHeightScale;
+	float height = ElevationHeightScale * _ArtistElevationScale;
+
+	//0.7 = sqrt(2) * 0.5;
+	//this equation should have two roots, one is (0,0), another is (sqrt(2), 0) and the vertex is (sqrt(2)/2, 1)
+	elevation = (-2 * pow((ratio - 0.7), 2) + 1) * height;
+	return elevation;
 }
