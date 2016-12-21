@@ -12,7 +12,7 @@ Shader "Snow/DeformationPostProcess" {
 			CGPROGRAM
 			#pragma target 3.0
 			#pragma vertex vert
-			#pragma fragment frag
+			#pragma fragment frag1
 			#pragma enable_d3d11_debug_symbols
 			#include "UnityCG.cginc"
 			#include "LightingAndUtility.cginc"
@@ -64,7 +64,9 @@ Shader "Snow/DeformationPostProcess" {
 				float deformationHeight = newInfo.r > 0? newInfo.r:1;
 				float newElevation = CalculateElevation(snowHeight, objectHeight, deformationHeight);				
 
-				float4 updatedInfo = UpdateSnowInfo(currentInfo.rg, float2(deformationHeight, newElevation));
+				currentInfo.g = decodeElevation(currentInfo.g);
+				float4 updatedInfo = UpdateSnowInfo(float4(currentInfo.rg,0,0), float4(deformationHeight, newElevation,0,0));
+				updatedInfo.g = encodeElevation(updatedInfo.g);
 				return updatedInfo;
 			}
 			float4 frag(v2f i) : SV_Target{

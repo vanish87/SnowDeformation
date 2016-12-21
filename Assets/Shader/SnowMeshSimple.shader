@@ -42,7 +42,7 @@ Shader "Snow/SnowMeshSimple"
 			#pragma enable_d3d11_debug_symbols
 			#pragma target 3.0
 
-			#pragma vertex vert
+			#pragma vertex vert1
 			#pragma fragment frag
 			
 
@@ -105,8 +105,23 @@ Shader "Snow/SnowMeshSimple"
 
 				float snowHeight = abs(heightUV.z) / _SnowCameraZScale;
 
-				float Delta = SnowDeformationInfo.r
-				positionWorldSpace.y = Delta* _DeformationSacle;
+				float Delta = max(0, snowHeight - SnowDeformationInfo.r);
+				positionWorldSpace.y -= Delta* _DeformationSacle * _SnowCameraZScale;
+
+				positionWorldSpace.y += decodeElevation(SnowDeformationInfo.g);
+				
+				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
+				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+				o.positionWS = positionWorldSpace;
+				o.normalWS = normalWorldSpace;
+				o.heightMapUV = accuHeightUV.xy;
+				//o.normalVS = mul(UNITY_MATRIX_V, normalWorldSpace);
+				//o.positionVS = mul(UNITY_MATRIX_V, positionWorldSpace);
+
+
+				o.tangentWS = normalize(mul(unity_ObjectToWorld, float4(v.tangent.xyz, 0.0)).xyz);
+				//o.binormalWS = normalize(cross(normalWorldSpace, o.tangentWS)	* v.tangent.w); // tangent.w is specific to Unity
+				return o;
 			}
 
 			v2f vert(appdata v)
@@ -125,7 +140,7 @@ Shader "Snow/SnowMeshSimple"
 
 				float  SnowDeformationHeight = SnowDeformationInfo.r * _SnowCameraZScale;
 				float  SnowObjectHeight = SnowDeformationInfo.g;
-				float  SnowElevationHeight = SnowDeformationInfo.b;
+				float  SnowElevationHeight = SnowDeformationInfo.g;
 				float  SnowElevationRatio = SnowDeformationInfo.a;
 
 				bool IsSnowCovered = SnowAccumulationInfo.a > 0;
@@ -172,7 +187,7 @@ Shader "Snow/SnowMeshSimple"
 
 				if (SnowElevationHeight > 0)
 				{
-					positionWorldSpace.y += decodeElevation(SnowElevationHeight);
+					positionWorldSpace.y += decodeElevation(SnowElevationHeight) * 10;
 					//o.Delta.x = clamp(SnowElevationHeight*2, 0, 0.5);
 					//o.Delta.y = SnowElevationHeight * 5;
 				}		

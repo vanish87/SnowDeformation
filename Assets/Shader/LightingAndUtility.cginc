@@ -171,7 +171,7 @@ float3 BlendNormal(float3 n1, float3 n2)
 float4 UpdateSnowInfo(float4 currentInfo, float4 newInfo)
 {
 	float deformationHeight= min(currentInfo.x, newInfo.x);
-	float elevationHeight  = max(currentInfo.y, newInfo.y);
+	float elevationHeight  = max(currentInfo.y < 1? currentInfo.y:0, newInfo.y);
 
 	float4 ret = float4(0, 0, 0, 0);
 	ret.r = deformationHeight;

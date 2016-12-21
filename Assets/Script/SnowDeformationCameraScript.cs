@@ -85,6 +85,8 @@ public class SnowDeformationCameraScript : MonoBehaviour
         material.SetTexture("_NewDepthTex", source);
         material.SetFloat("_DeltaTime", Time.deltaTime);
         material.SetFloat("_ArtistScale", artistScale);
+        material.SetFloat("_ArtistElevationScale", artistScale);
+        
         //called when depthCamera.targetTexture is set
         Graphics.Blit(source, destination, material, 0);
 
