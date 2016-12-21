@@ -94,7 +94,7 @@ Shader "Snow/DeformationPostProcess" {
 					//the deeper an oject got into snow, the greater ElevationHeightScale it produces.
 					ElevationHeightScale = snowHeight - objectHeight;
 					ratio = elevationDistance / ElevationHeightScale;
-					float height = ElevationHeightScale * _ArtistScale;
+					float height = ElevationHeightScale * _ArtistElevationScale;
 
 					//0.7 = sqrt(2) * 0.5;
 					//this equation should have two roots, one is (0,0), another is (sqrt(2), 0) and the vertex is (sqrt(2)/2, 1)

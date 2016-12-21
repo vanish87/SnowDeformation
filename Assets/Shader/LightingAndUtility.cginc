@@ -91,7 +91,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float3 lightDir = normalize(float3(1, 1, 0));// normalize(_WorldSpaceLightPos0.xyz);
 	normal = normalize(normal);
 
-	float4 ambient = float4(0.2f, 0.2f, 0.2f, 1.0f);
+	float4 ambient = float4(0.1f, 0.1f, 0.1f, 1.0f);
 	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	float roughness = _Roughness;
@@ -138,11 +138,11 @@ float3 TransfromToTextureCoord(float4 Position, float4x4 CameraMatirx, float Cam
 //set elevation to normalize value
 float encodeElevation(float elevation)
 {
-	return elevation / ElevationScale;
+	return ((elevation / ElevationScale) + 1)* 0.5;
 }
 float decodeElevation(float elevation)
 {
-	return elevation * ElevationScale;
+	return (elevation-0.5) * 2 * ElevationScale;
 }
 
 float SampleNosie(sampler2D noise, float3 viewVector, float2 uv)
@@ -171,7 +171,7 @@ float3 BlendNormal(float3 n1, float3 n2)
 float4 UpdateSnowInfo(float4 currentInfo, float4 newInfo)
 {
 	float deformationHeight= min(currentInfo.x, newInfo.x);
-	float elevationHeight  = max(currentInfo.y < 1? currentInfo.y:0, newInfo.y);
+	float elevationHeight  = max(currentInfo.y < 1 * 50? currentInfo.y:0, newInfo.y);
 
 	float4 ret = float4(0, 0, 0, 0);
 	ret.r = deformationHeight;
@@ -192,7 +192,7 @@ float CalculateElevation(float snowHeight, float objectHeight, float deformation
 {
 	float elevation = 0;
 	//this object is above snow or is deformation pixel, early return
-	if (snowHeight < objectHeight || deformationHeight < objectHeight) return elevation;
+	if (snowHeight < objectHeight) return elevation;
 
 	float elevationDistance = getElevationDistance(snowHeight, objectHeight, deformationHeight);
 

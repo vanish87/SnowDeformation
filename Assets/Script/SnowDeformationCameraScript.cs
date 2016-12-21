@@ -23,8 +23,8 @@ public class SnowDeformationCameraScript : MonoBehaviour
     public Camera snowAccumulationMapCamera;
     public RenderTexture AccumulationTex;
 
-    [Range(0, 20F)]
-    public float artistScale = 1.0F;
+    [Range(0, 25f)]
+    public float artistScale = 1.0f;
 
     // Use this for initialization
     void Start()
@@ -84,7 +84,6 @@ public class SnowDeformationCameraScript : MonoBehaviour
         material.SetTexture("_CurrentAccumulationTexture", AccumulationTex);
         material.SetTexture("_NewDepthTex", source);
         material.SetFloat("_DeltaTime", Time.deltaTime);
-        material.SetFloat("_ArtistScale", artistScale);
         material.SetFloat("_ArtistElevationScale", artistScale);
         
         //called when depthCamera.targetTexture is set

@@ -106,9 +106,14 @@ Shader "Snow/SnowMeshSimple"
 				float snowHeight = abs(heightUV.z) / _SnowCameraZScale;
 
 				float Delta = max(0, snowHeight - SnowDeformationInfo.r);
-				positionWorldSpace.y -= Delta* _DeformationSacle * _SnowCameraZScale;
+				if (Delta > 0)
+				{
+					positionWorldSpace.y -= Delta* _DeformationSacle * _SnowCameraZScale;
+				}
 
-				positionWorldSpace.y += decodeElevation(SnowDeformationInfo.g);
+				positionWorldSpace.y += Delta>0?0:decodeElevation(SnowDeformationInfo.g);
+
+				o.Delta.x = lerp(1, 0, Delta);
 				
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
@@ -253,9 +258,7 @@ Shader "Snow/SnowMeshSimple"
 					final.rgb = 1;
 				}
 
-				float ColorScale = 1;
-				ColorScale += i.Delta.x;
-				final.rgb *= ColorScale;
+				final.rgb *= i.Delta.x;
 
 				if (i.Delta.y > 0.3 && i.Delta.y < 0.7)
 				{
