@@ -89,6 +89,25 @@ Shader "Snow/SnowMeshSimple"
 			float _SnowCameraSize; 
 			float _SnowCameraZScale;
 
+			v2f vert1(appdata v)
+			{
+				v2f o;
+				float4 positionWorldSpace = mul(unity_ObjectToWorld, v.vertex);
+				//Object to world space is affine transform, the Inverse Transpose Matrix is equal to itself<=>(M-1)T = M
+				float3 normalWorldSpace = mul(unity_ObjectToWorld, v.normal);
+
+				float3 heightUV = TransfromToTextureCoord(positionWorldSpace, _SnowCameraMatrix, _SnowCameraSize);
+				float3 accuHeightUV = TransfromToTextureCoord(positionWorldSpace, _SnowAccumulationCameraMatrix, _SnowCameraSize);
+
+				//Extract info from 2 height map texture
+				float4 SnowDeformationInfo = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0));
+				float4 SnowAccumulationInfo = tex2Dlod(_SnowAccumulationMap, float4(accuHeightUV.xy, 0, 0));
+
+				float snowHeight = abs(heightUV.z) / _SnowCameraZScale;
+
+				float Delta = SnowDeformationInfo.r
+				positionWorldSpace.y = Delta* _DeformationSacle;
+			}
 
 			v2f vert(appdata v)
 			{
@@ -109,32 +128,33 @@ Shader "Snow/SnowMeshSimple"
 				float  SnowElevationHeight = SnowDeformationInfo.b;
 				float  SnowElevationRatio = SnowDeformationInfo.a;
 
-				float SnowAccumulationHeight  = SnowAccumulationInfo.a * _SnowCameraZScale;
+				bool IsSnowCovered = SnowAccumulationInfo.a > 0;
+				float SnowAccumulationHeight  = IsSnowCovered?(1-SnowAccumulationInfo.a) * _SnowCameraZScale:0;
 				float3 SnowAccumulationNormal = (SnowAccumulationInfo.rgb * 2) - 1;
 
 				float SnowMeshHeight = abs(heightUV.z);
 
-				bool IsSnowCovered = SnowAccumulationHeight > 0;
 
 				float Delta = 0;
 
 				//caculate snow height delta
 				if (IsSnowCovered)
 				{
-					Delta = max(SnowMeshHeight - SnowAccumulationHeight, 0) * 0.1;
+					Delta = max(SnowAccumulationHeight - SnowMeshHeight, 0);
+					Delta = Delta > 3 ? -1: Delta;
 					float SnowDifference = dot(SnowAccumulationNormal, _SnowDirection);
 					if (SnowDifference>  _SticknessCos)
 					{
-						positionWorldSpace.y += SnowMeshHeight*0.5+(Delta);
+						positionWorldSpace.y += Delta;
 						positionWorldSpace.xyz += SnowAccumulationNormal.xyz * _AccumulationSacle.xyz * _SnowDirection;
+						//blend object normal and snow mesh normal
+						normalWorldSpace = BlendNormal(SnowAccumulationNormal, normalWorldSpace);
 					}
 
 					o.Delta.x = clamp(Delta / (_SnowCameraZScale * 0.5), 0, 0.5);
-					//blend object normal and snow mesh normal
-					normalWorldSpace = SnowAccumulationNormal;// normalize(SnowAccumulationNormal + normalWorldSpace);
 
 					//defines alpha chanel
-					o.Delta.z = (SnowDifference + 1) * 0.5;
+					//o.Delta.z = (SnowDifference + 1) * 0.5;
 
 					//debug
 					o.normalObject = SnowAccumulationNormal;
@@ -142,11 +162,9 @@ Shader "Snow/SnowMeshSimple"
 				else
 				{
 					Delta = max(SnowMeshHeight - SnowDeformationHeight, 0);
-					if (Delta > 0)
-					{
-						//To modify vertex and add snow deformation to this object
-						positionWorldSpace.y -= Delta* _DeformationSacle;
-					}
+
+					//To modify vertex and add snow deformation to this object
+					positionWorldSpace.y -= Delta* _DeformationSacle;
 
 					o.Delta.x = clamp(-Delta*2 / (_SnowCameraZScale * 0.5), -0.5, 0);
 					o.Delta.z = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;

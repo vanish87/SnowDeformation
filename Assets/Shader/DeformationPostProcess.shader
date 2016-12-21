@@ -38,13 +38,7 @@ Shader "Snow/DeformationPostProcess" {
 				return o;
 			}
 
-			float getElevation(float currentSnowHeight, float currentObjectHeight, float deformationHeight )
-			{
-				float depressinDis = sqrt(currentSnowHeight - currentObjectHeight);
-				float distanceFromFoot = sqrt(deformationHeight - currentObjectHeight);
-				float elevationDistance = distanceFromFoot - depressinDis;
-				return elevationDistance;
-			}
+			
 			
 			//this post process do two things:
 			//1. calculate new deformation if it has a deeper depths; refill snow deformation when it is nessceary.
@@ -52,6 +46,27 @@ Shader "Snow/DeformationPostProcess" {
 
 			//_CurrentDepthTexture stores current deormation and elevation info
 			//r: deformationHeight; g: objectHeight; b: elevation
+
+			float4 frag1(v2f i) : SV_Target
+			{
+				//r: deformationHeight; g: objectHeight;
+				float3 newInfo = tex2D(_NewDepthTex, i.uv.xy).rgb;
+				//r: deformationHeight; g: elevationHeight
+				float4 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgba;
+				//rgb: normal; a:depth in Accumulation camera space
+				float snowHeight = tex2D(_CurrentAccumulationTexture, i.uv.xy).a;
+				//TODO: set _CurrentAccumulationTexture.a default to 0.5
+				//then snowHeight = 1 - snowHeight;
+				snowHeight = snowHeight > 0 ? 1 - snowHeight : 0.5;
+
+				//TODO: should normalize here
+				float objectHeight = newInfo.g;
+				float deformationHeight = newInfo.r > 0? newInfo.r:1;
+				float newElevation = CalculateElevation(snowHeight, objectHeight, deformationHeight);				
+
+				float4 updatedInfo = UpdateSnowInfo(currentInfo.rg, float2(deformationHeight, newElevation));
+				return updatedInfo;
+			}
 			float4 frag(v2f i) : SV_Target{
 				float3 newInfo = tex2D(_NewDepthTex, i.uv.xy).rgb;
 				float4 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgba;
@@ -63,7 +78,7 @@ Shader "Snow/DeformationPostProcess" {
 
 				//snow height = 0.5
 				float elevation = 0;
-				snowHeight = 0.5;// snowHeight < 1 ? 1 - snowHeight : 0.5;
+				snowHeight = snowHeight < 1 ? 1 - snowHeight : 0.5;
 				float ratio = 0; float ElevationHeightScale = 0;
 				float maxheight = 1;
 				//check if this pixel is a trail pixel, trail pixel should calculate elevation
@@ -72,7 +87,7 @@ Shader "Snow/DeformationPostProcess" {
 					snowHeight > objectHeight)
 				{
 					//deformationHeight > snowHeight so elevationDistance is bigger than 0
-					float elevationDistance = getElevation(snowHeight, objectHeight, deformationHeight);
+					float elevationDistance = getElevationDistance(snowHeight, objectHeight, deformationHeight);
 
 					//the deeper an oject got into snow, the greater ElevationHeightScale it produces.
 					ElevationHeightScale = snowHeight - objectHeight;
