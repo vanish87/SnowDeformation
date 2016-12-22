@@ -62,11 +62,12 @@ Shader "Snow/DeformationPostProcess" {
 				//TODO: should normalize here
 				float objectHeight = newInfo.g;
 				float deformationHeight = newInfo.r > 0? newInfo.r:1;
-				float newElevation = CalculateElevation(snowHeight, objectHeight, deformationHeight);				
+				float2 newElevation = CalculateElevation(snowHeight, objectHeight, deformationHeight);				
 
 				currentInfo.g = decodeElevation(currentInfo.g);
-				float4 updatedInfo = UpdateSnowInfo(float4(currentInfo.rg,0,0), float4(deformationHeight, newElevation,0,0));
+				float4 updatedInfo = UpdateSnowInfo(float4(currentInfo.rgb,0), float4(deformationHeight, newElevation.y, newElevation.x,0));
 				updatedInfo.g = encodeElevation(updatedInfo.g);
+				updatedInfo.b = newElevation.x>0? newElevation.x:1;
 				return updatedInfo;
 			}
 			float4 frag(v2f i) : SV_Target{

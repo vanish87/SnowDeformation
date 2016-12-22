@@ -171,11 +171,13 @@ float3 BlendNormal(float3 n1, float3 n2)
 float4 UpdateSnowInfo(float4 currentInfo, float4 newInfo)
 {
 	float deformationHeight= min(currentInfo.x, newInfo.x);
-	float elevationHeight  = max(currentInfo.y < 1 * 50? currentInfo.y:0, newInfo.y);
+	float elevationHeight = max(currentInfo.y < 1 * 50 ? currentInfo.y : 0, newInfo.y);
+	float elevationDis = max(currentInfo.y < 1 * 50 ? currentInfo.y : 0, newInfo.z);
 
 	float4 ret = float4(0, 0, 0, 0);
 	ret.r = deformationHeight;
 	ret.g = elevationHeight;
+	ret.b = elevationDis;
 
 	return ret;
 }
@@ -188,11 +190,11 @@ float getElevationDistance(float currentSnowHeight, float currentObjectHeight, f
 	return elevationDistance;
 }
 
-float CalculateElevation(float snowHeight, float objectHeight, float deformationHeight)
+float2 CalculateElevation(float snowHeight, float objectHeight, float deformationHeight)
 {
 	float elevation = 0;
 	//this object is above snow or is deformation pixel, early return
-	if (snowHeight < objectHeight) return elevation;
+	if (snowHeight < objectHeight) return float2(0, elevation);
 
 	float elevationDistance = getElevationDistance(snowHeight, objectHeight, deformationHeight);
 
@@ -203,5 +205,6 @@ float CalculateElevation(float snowHeight, float objectHeight, float deformation
 	//0.7 = sqrt(2) * 0.5;
 	//this equation should have two roots, one is (0,0), another is (sqrt(2), 0) and the vertex is (sqrt(2)/2, 1)
 	elevation = (-2 * pow((ratio - 0.7), 2) + 1) * height;
-	return elevation;
+	//elevationDistance normalize to ElevationHeightScale
+	return float2(ratio, elevation);
 }
