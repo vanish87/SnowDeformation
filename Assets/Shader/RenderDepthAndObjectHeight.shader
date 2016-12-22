@@ -27,7 +27,7 @@ Shader "Snow/RenderDepthAndObjectHeight" {
 				v2f o;
 				//first scale object on xz plane to calculate trail elevation later in frag shader.
 				//this _ElevationTrailScale is used to define the area where Trail will be rendered,
-				float Scale =( 0.5 - _ObjectMinHeight ) * 20;// _ElevationTrailScale;
+				float Scale = (0.5 - _ObjectMinHeight) * 20;// _ElevationTrailScale;
 				float4 x = float4(Scale, 0, 0, 0);
 				float4 y = float4(0, 1, 0, 0);
 				float4 z = float4(0, 0, Scale, 0);

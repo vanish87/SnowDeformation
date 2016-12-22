@@ -113,7 +113,7 @@ Shader "Snow/SnowMeshSimple"
 				positionWorldSpace.y += Delta>0?0: max(0, decodeElevation(SnowDeformationInfo.g));
 
 				//also have deformation delta and elevation dis as a texture coord
-				o.Delta.x = lerp(1, 0, Delta);
+				o.Delta.x = lerp(1, 0, Delta * 2);
 				o.Delta.y = decodeFromColorSpace(SnowDeformationInfo.b);
 				
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
