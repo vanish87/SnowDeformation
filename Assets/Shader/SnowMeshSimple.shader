@@ -62,7 +62,6 @@ Shader "Snow/SnowMeshSimple"
 				float4 vertex	: SV_POSITION;
 				float2 uv		: TEXCOORD0;
 				float4 positionWS: TEXCOORD5;
-				//float3 normalVS : NORMAL0;
 				float3 normalWS		: TEXCOORD2;
 				float3 tangentWS	: TEXCOORD3;
 				float3 binormalWS	: TEXCOORD4;
@@ -106,23 +105,23 @@ Shader "Snow/SnowMeshSimple"
 				float snowHeight = abs(heightUV.z) / _SnowCameraZScale;
 
 				float Delta = max(0, snowHeight - SnowDeformationInfo.r);
+				//first get deformation Height and compare it with snow height, make a deformation
 				positionWorldSpace.y -= Delta* _DeformationSacle * _SnowCameraZScale;
-				positionWorldSpace.y += Delta>0?0:decodeElevation(SnowDeformationInfo.g);
+				//if there is no deformation, then try to make a trail
+				positionWorldSpace.y += Delta>0?0: max(0, decodeElevation(SnowDeformationInfo.g));
 
+				//also have deformation delta and elevation dis as a texture coord
 				o.Delta.x = lerp(1, 0, Delta);
-				o.Delta.y = SnowDeformationInfo.b;
+				o.Delta.y = decodeFromColorSpace(SnowDeformationInfo.b);
 				
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				o.positionWS = positionWorldSpace;
 				o.normalWS = normalWorldSpace;
 				o.heightMapUV = accuHeightUV.xy;
-				//o.normalVS = mul(UNITY_MATRIX_V, normalWorldSpace);
-				//o.positionVS = mul(UNITY_MATRIX_V, positionWorldSpace);
 
 
 				o.tangentWS = normalize(mul(unity_ObjectToWorld, float4(v.tangent.xyz, 0.0)).xyz);
-				//o.binormalWS = normalize(cross(normalWorldSpace, o.tangentWS)	* v.tangent.w); // tangent.w is specific to Unity
 				return o;
 			}
 

@@ -69,7 +69,7 @@ public class SnowDeformationCameraScript : MonoBehaviour
     {
         RenderTexture oldRT = RenderTexture.active;
         Graphics.SetRenderTarget(currentSnowHeight);
-        GL.Clear(true, true, Color.white);
+        GL.Clear(true, true, new Color(1,0,1,1));
         RenderTexture.active = oldRT;
     }
     // Update is called once per frame

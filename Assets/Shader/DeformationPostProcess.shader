@@ -46,12 +46,11 @@ Shader "Snow/DeformationPostProcess" {
 
 			//_CurrentDepthTexture stores current deormation and elevation info
 			//r: deformationHeight; g: objectHeight; b: elevation
-
 			float4 frag1(v2f i) : SV_Target
 			{
 				//r: deformationHeight; g: objectHeight;
 				float3 newInfo = tex2D(_NewDepthTex, i.uv.xy).rgb;
-				//r: deformationHeight; g: elevationHeight
+				//r: deformationHeight; g: elevationHeight b:elevationDistance
 				float4 currentInfo = tex2D(_CurrentDepthTexture, i.uv.xy).rgba;
 				//rgb: normal; a:depth in Accumulation camera space
 				float snowHeight = tex2D(_CurrentAccumulationTexture, i.uv.xy).a;
@@ -59,15 +58,25 @@ Shader "Snow/DeformationPostProcess" {
 				//then snowHeight = 1 - snowHeight;
 				snowHeight = snowHeight > 0 ? 1 - snowHeight : 0.5;
 
-				//TODO: should normalize here
+				//_NewDepthTex is normalize
 				float objectHeight = newInfo.g;
 				float deformationHeight = newInfo.r > 0? newInfo.r:1;
-				float2 newElevation = CalculateElevation(snowHeight, objectHeight, deformationHeight);				
+				float2 newElevation = CalculateElevation(snowHeight, objectHeight, deformationHeight);	
+				//newElevation.y is elevation height, newElevation.x is elevation distance
+				//both of them could be positive or nagitive, so then should be normalize to corlor space
 
+				//deformation Height(r value) is [0, 1]
+				//elevation height(g value)   is [-camerapos, camerapos]
+				//elevation distance(b value) is [-1,1]
+				//so only encode/decode elevation height and elevation distance that calculated in CalculateElevation above
 				currentInfo.g = decodeElevation(currentInfo.g);
+				currentInfo.b = decodeFromColorSpace(currentInfo.b);
+
 				float4 updatedInfo = UpdateSnowInfo(float4(currentInfo.rgb,0), float4(deformationHeight, newElevation.y, newElevation.x,0));
+
 				updatedInfo.g = encodeElevation(updatedInfo.g);
-				updatedInfo.b = newElevation.x>0? newElevation.x:1;
+				updatedInfo.b = encodeToColorSpace(updatedInfo.b);
+
 				return updatedInfo;
 			}
 			float4 frag(v2f i) : SV_Target{

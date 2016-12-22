@@ -87,7 +87,8 @@
 
 				float3 normalDir = normalize(UnpackNormal(tex2D(_NormalMapTex, i.uv)));
 				float3 snowNormal = normalize(UnpackNormal(tex2D(_SnowNormalMapTex, i.uv)));
-				normalDir = BlendNormal(normalDir, snowNormal);
+				//normalDir = BlendNormal(normalDir, snowNormal);
+				normalDir = snowNormal;
 
 				float3 objectNormalWS =  normalize(mul(float4(normalDir,0), TtoW));
 

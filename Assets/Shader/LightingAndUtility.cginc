@@ -34,7 +34,9 @@ float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, fl
 
 	float diffuse_oren_nayar = cos_phi * sin_theta / max(cos_theta.x, cos_theta.y);
 
-	return albedo * (cos_theta.x * (oren_nayar.x + oren_nayar.y * diffuse_oren_nayar));
+	float result = (cos_theta.x * (oren_nayar.x + oren_nayar.y * diffuse_oren_nayar));
+
+	return albedo * result + ((1- result) *0.5 * float3(0,0,1));
 }
 
 float SchlickFresnelWithN(float n, float3 halfVec, float3 viewDir/*or LightDir*/)
@@ -145,6 +147,16 @@ float decodeElevation(float elevation)
 	return (elevation-0.5) * 2 * ElevationScale;
 }
 
+//set value to normalize color value
+float encodeToColorSpace(float value)
+{
+	return (value + 1)* 0.5;
+}
+float decodeFromColorSpace(float value)
+{
+	return (value - 0.5) * 2;
+}
+
 float SampleNosie(sampler2D noise, float3 viewVector, float2 uv)
 {
 	float p1 = tex2D(noise, uv + float2(0, viewVector.x * _Offset.x)).r;
@@ -171,8 +183,8 @@ float3 BlendNormal(float3 n1, float3 n2)
 float4 UpdateSnowInfo(float4 currentInfo, float4 newInfo)
 {
 	float deformationHeight= min(currentInfo.x, newInfo.x);
-	float elevationHeight = max(currentInfo.y < 1 * 50 ? currentInfo.y : 0, newInfo.y);
-	float elevationDis = max(currentInfo.y < 1 * 50 ? currentInfo.y : 0, newInfo.z);
+	float elevationHeight  = max(currentInfo.y, newInfo.y);
+	float elevationDis	   = min(currentInfo.z, newInfo.z);
 
 	float4 ret = float4(0, 0, 0, 0);
 	ret.r = deformationHeight;
