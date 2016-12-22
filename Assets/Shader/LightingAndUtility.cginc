@@ -36,7 +36,7 @@ float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, fl
 
 	float result = (cos_theta.x * (oren_nayar.x + oren_nayar.y * diffuse_oren_nayar));
 
-	return albedo * result + ((1- result) *0.5 * float3(0,0,1));
+	return albedo * result + ((1- result) *0.4 * float3(102/255.0f,220/255.0f,250/255.0f));
 }
 
 float SchlickFresnelWithN(float n, float3 halfVec, float3 viewDir/*or LightDir*/)
@@ -93,7 +93,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float3 lightDir = normalize(float3(1, 1, 0));// normalize(_WorldSpaceLightPos0.xyz);
 	normal = normalize(normal);
 
-	float4 ambient = float4(0.1f, 0.1f, 0.1f, 1.0f);
+	float4 ambient = float4(0.0f, 0.0f, 0.0f, 1.0f);
 	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	float roughness = _Roughness;

@@ -270,6 +270,7 @@ Shader "Snow/SnowMeshSimple"
 					x = 0.9 + (0.1 * x);
 					final.rgb *= x;
 				}
+				//final.a *= normalWS.y;
 				//final.rgb = i.Delta.y;// < 1 && i.Delta.y  > 0 ? i.Delta.y : 0;
 				//final.rgb *= (cos(4 * PI*i.Delta.y) + 1.25) *0.5;
 				//final.a = i.Delta.z * 3;
