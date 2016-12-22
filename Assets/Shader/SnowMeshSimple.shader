@@ -19,8 +19,10 @@ Shader "Snow/SnowMeshSimple"
 		_SnowAccumulationMap("Snow Accumulation Map", 2D) = "black" {}
 
 		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 3
-		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 1
-		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 30
+		_Roughness("Oren Nayar Roughness", Range(0, 1.1)) = 1
+		_BlinnSpecularPower("Blinn Specular Power", Range(0, 1000)) = 30
+		_ShadingBlendScale("Shading blend scale", Range(0, 1)) = 0.4
+		_ShadingEnergyPreserve("Shading Energy Preserve", Range(0, 1)) = 0.4
 
 
 		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
@@ -246,12 +248,13 @@ Shader "Snow/SnowMeshSimple"
 				float3 pos_eye = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);
 				//snowSpecularColor = float4(0, 0, 1,1);
 				//snowShadeColor = float4(1, 1, 1, 1);
+				//if(snowSpecularColor.r > 0.5) snowSpecularColor *= 2;
 				final = CalLighting_OrenNayarBlinn(normalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
 
 				float SpecularNoise = SampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
 				if (SpecularNoise > 0)
 				{
-					final.rgb = 1;
+					final.rgb = SpecularNoise + 0.8;
 				}
 
 				final.rgb *= i.Delta.x;

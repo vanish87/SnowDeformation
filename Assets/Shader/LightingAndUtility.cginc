@@ -12,10 +12,12 @@ static float4 _Offset = float4(0.005, -0.006, 0.007, 0.008);
 float _Roughness = 1;
 float _RefractiveIndex = 1;
 float _ArtistElevationScale = 1;
+float _ShadingBlendScale = 0.4;
+float _ShadingEnergyPreserve = 0.4;
 
 //http://mimosa-pudica.net/improved-oren-nayar.html
 //http://shaderjvo.blogspot.jp/2011/08/van-ouwerkerks-rewrite-of-oren-nayar.html
-float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, float3 albedo)
+float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, float3 albedo, float3 shadingColor)
 {
 	float roughness = sigma;
 	float roughness2 = roughness*roughness;
@@ -36,7 +38,7 @@ float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, fl
 
 	float result = (cos_theta.x * (oren_nayar.x + oren_nayar.y * diffuse_oren_nayar));
 
-	return albedo * result + ((1- result) *0.4 * float3(102/255.0f,220/255.0f,250/255.0f));
+	return (albedo * result * (1 - (_ShadingBlendScale * _ShadingEnergyPreserve)) ) + ((1- result) * _ShadingBlendScale * shadingColor);
 }
 
 float SchlickFresnelWithN(float n, float3 halfVec, float3 viewDir/*or LightDir*/)
@@ -93,7 +95,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float3 lightDir = normalize(float3(1, 1, 0));// normalize(_WorldSpaceLightPos0.xyz);
 	normal = normalize(normal);
 
-	float4 ambient = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float4 ambient = float4(0.2f, 0.2f, 0.2f, 1.0f);
 	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	float roughness = _Roughness;
@@ -108,16 +110,16 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	//normal or halfVec here to get best result
 	//half is correct term.
 	float fresnel = SchlickFresnelWithN(refractiveIndex, halfVec, viewDir);
-
+	float3 shadingColor = float3(102 / 255.0f, 220 / 255.0f, 250 / 255.0f);
 	//diffuse term is OrenNayar model
-	float3 diffuse =  OrenNayar(lightDir, viewDir, normal, roughness, diffuseAlbedo);
+	float3 diffuse =  OrenNayar(lightDir, viewDir, normal, roughness, diffuseAlbedo, shadingColor);
 	diffuse *= (1.0f -  (specularAlbedo * fresnel));
 
 	//specular term is BlinnPhong model
 	float3 specular = specularAlbedo * CalBlinnPhong(normal, viewDir, lightDir, false, specularPower);
 	//they are combined with fresnel term
 	specular *= fresnel;
-
+	
 	float3 acc_color = (ambient + diffuse + specular);
 	litColor = litColor + float4(acc_color, 1.0f);
 
