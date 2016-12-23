@@ -98,22 +98,32 @@ Shader "Snow/SnowMeshSimple"
 				float3 heightUV = TransfromToTextureCoord(positionWorldSpace, _SnowCameraMatrix, _SnowCameraSize);
 				float3 accuHeightUV = TransfromToTextureCoord(positionWorldSpace, _SnowAccumulationCameraMatrix, _SnowCameraSize);
 
-				//Extract info from 2 height map texture
+				//Extract info from 2 height map textures
 				float4 SnowDeformationInfo = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0));
 				float4 SnowAccumulationInfo = tex2Dlod(_SnowAccumulationMap, float4(accuHeightUV.xy, 0, 0));
+
+				float SnowAccumulationHeight = (1 - SnowAccumulationInfo.a);
+				SnowAccumulationHeight = min(SnowAccumulationHeight, 0.7);
+				float3 SnowAccumulationNormal = (SnowAccumulationInfo.rgb * 2) - 1;
 
 				float snowHeight = abs(heightUV.z) / _SnowCameraZScale;
 
 				float Delta = max(0, snowHeight - SnowDeformationInfo.r);
+				float AccumulationDelta = max(0, SnowAccumulationHeight - snowHeight);
 				//first get deformation Height and compare it with snow height, make a deformation
 				positionWorldSpace.y -= Delta* _DeformationSacle * _SnowCameraZScale;
+				//then add accumulated snow
+				positionWorldSpace.y += AccumulationDelta * _DeformationSacle * _SnowCameraZScale * 1.5;
 				//if there is no deformation, then try to make a trail
 				positionWorldSpace.y += Delta>0?0: max(0, decodeElevation(SnowDeformationInfo.g));
 
 				//also have deformation delta and elevation dis as a texture coord
 				o.Delta.x = lerp(1, 0, Delta);
 				o.Delta.y = decodeFromColorSpace(SnowDeformationInfo.b);
+				o.Delta.z = AccumulationDelta;
 				
+				if(AccumulationDelta > 0)normalWorldSpace.xyz = BlendNormal(normalWorldSpace.xyz,SnowAccumulationNormal);
+
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				o.positionWS = positionWorldSpace;
