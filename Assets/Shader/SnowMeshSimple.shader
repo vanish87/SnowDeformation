@@ -21,6 +21,8 @@ Shader "Snow/SnowMeshSimple"
 		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 3
 		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 1
 		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 30
+		_AmbientColor("Ambient Color", Color) = (0.1, 0.1, 0.1, 1)
+		_DiffuseShadeColor("Diffuse Shade Color", Color) = (0.1, 0.1, 0.1, 1.0)
 
 
 		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
@@ -109,20 +111,24 @@ Shader "Snow/SnowMeshSimple"
 				float snowHeight = abs(heightUV.z) / _SnowCameraZScale;
 
 				float Delta = max(0, snowHeight - SnowDeformationInfo.r);
+				bool HasDeformation = Delta > 0;
 				float AccumulationDelta = max(0, SnowAccumulationHeight - snowHeight);
 				//first get deformation Height and compare it with snow height, make a deformation
 				positionWorldSpace.y -= Delta* _DeformationSacle * _SnowCameraZScale;
 				//then add accumulated snow
 				positionWorldSpace.y += AccumulationDelta * _DeformationSacle * _SnowCameraZScale * 1.5;
 				//if there is no deformation, then try to make a trail
-				positionWorldSpace.y += Delta>0?0: max(0, decodeElevation(SnowDeformationInfo.g));
+				positionWorldSpace.y += HasDeformation?0: max(0, decodeElevation(SnowDeformationInfo.g));
 
 				//also have deformation delta and elevation dis as a texture coord
 				o.Delta.x = lerp(1, 0, Delta);
 				o.Delta.y = decodeFromColorSpace(SnowDeformationInfo.b);
 				o.Delta.z = AccumulationDelta;
 				
-				if(AccumulationDelta > 0)normalWorldSpace.xyz = BlendNormal(normalWorldSpace.xyz,SnowAccumulationNormal);
+				if (AccumulationDelta > 0 && !HasDeformation)
+				{
+					normalWorldSpace.xyz = BlendNormal(normalWorldSpace.xyz, SnowAccumulationNormal);
+				}
 
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
