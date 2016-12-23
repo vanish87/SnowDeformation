@@ -9,6 +9,10 @@ float _NoiseMin;
 float _NoiseMax;
 static float4 _Offset = float4(0.005, -0.006, 0.007, 0.008);
 
+
+float4 _AmbientColor = float4(0.1f, 0.1f, 0.1f, 1.0f);
+float4 _DiffuseShadeColor = float4(0.1f, 0.1f, 0.1f, 1.0f);
+
 float _Roughness = 1;
 float _RefractiveIndex = 1;
 float _ArtistElevationScale = 1;
@@ -95,7 +99,6 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float3 lightDir = normalize(float3(1, 1, 0));// normalize(_WorldSpaceLightPos0.xyz);
 	normal = normalize(normal);
 
-	float4 ambient = float4(0.2f, 0.2f, 0.2f, 1.0f);
 	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	float roughness = _Roughness;
@@ -119,8 +122,8 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float3 specular = specularAlbedo * CalBlinnPhong(normal, viewDir, lightDir, false, specularPower);
 	//they are combined with fresnel term
 	specular *= fresnel;
-	
-	float3 acc_color = (ambient + diffuse + specular);
+
+	float3 acc_color = (_AmbientColor + diffuse + specular);
 	litColor = litColor + float4(acc_color, 1.0f);
 
 	return litColor;
