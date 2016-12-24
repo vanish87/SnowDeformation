@@ -16,6 +16,10 @@ public class SnowMeshRendering : MonoBehaviour {
     public Camera snowHeighMapCamera;
     public Camera snowAccumulationMapCamera;
 
+
+    [Range(0, 1)]
+    public int enabldeDeformation = 1;
+
     // Use this for initialization
     void Start()
     {
@@ -46,6 +50,7 @@ public class SnowMeshRendering : MonoBehaviour {
             snowMaterial.SetFloat("_SnowCameraSize", snowHeighMapCamera.orthographicSize);
             snowMaterial.SetFloat("_SnowCameraZScale", snowHeighMapCamera.farClipPlane - snowHeighMapCamera.nearClipPlane);
         }
+        snowMaterial.SetFloat("_EnabldeDeformation", enabldeDeformation);
 
     }
 

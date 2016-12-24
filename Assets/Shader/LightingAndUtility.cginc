@@ -11,7 +11,7 @@ static float4 _Offset = float4(0.005, -0.006, 0.007, 0.008);
 
 
 float4 _AmbientColor = float4(0.1f, 0.1f, 0.1f, 1.0f);
-float4 _DiffuseShadeColor = float4(0.1f, 0.1f, 0.1f, 1.0f);
+float4 _DiffuseShadeColor = float4(102 / 255.0f, 220 / 255.0f, 250 / 255.0f, 255);
 
 float _Roughness = 1;
 float _RefractiveIndex = 1;
@@ -113,9 +113,8 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	//normal or halfVec here to get best result
 	//half is correct term.
 	float fresnel = SchlickFresnelWithN(refractiveIndex, halfVec, viewDir);
-	float3 shadingColor = float3(102 / 255.0f, 220 / 255.0f, 250 / 255.0f);
 	//diffuse term is OrenNayar model
-	float3 diffuse =  OrenNayar(lightDir, viewDir, normal, roughness, diffuseAlbedo, shadingColor);
+	float3 diffuse =  OrenNayar(lightDir, viewDir, normal, roughness, diffuseAlbedo, _DiffuseShadeColor);
 	diffuse *= (1.0f -  (specularAlbedo * fresnel));
 
 	//specular term is BlinnPhong model

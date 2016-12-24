@@ -24,8 +24,8 @@ Shader "Snow/SnowMeshSimple"
 
 		_ShadingBlendScale("Shading blend scale", Range(0, 1)) = 0.4
 		_ShadingEnergyPreserve("Shading Energy Preserve", Range(0, 1)) = 0.4
-		_AmbientColor("Ambient Color", Color) = (0.1, 0.1, 0.1, 1)
-		_DiffuseShadeColor("Diffuse Shade Color", Color) = (0.1, 0.1, 0.1, 1.0)
+		_AmbientColor("Ambient Color", Color) = (1, 1, 1, 255)
+		_DiffuseShadeColor("Diffuse Shade Color", Color) = (102, 220, 250, 255)
 
 
 		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
@@ -93,6 +93,8 @@ Shader "Snow/SnowMeshSimple"
 			float _SnowCameraSize; 
 			float _SnowCameraZScale;
 
+			float _EnabldeDeformation;
+
 			v2f vert1(appdata v)
 			{
 				v2f o;
@@ -116,12 +118,15 @@ Shader "Snow/SnowMeshSimple"
 				float Delta = max(0, snowHeight - SnowDeformationInfo.r);
 				bool HasDeformation = Delta > 0;
 				float AccumulationDelta = max(0, SnowAccumulationHeight - snowHeight);
-				//first get deformation Height and compare it with snow height, make a deformation
-				positionWorldSpace.y -= Delta* _DeformationSacle * _SnowCameraZScale;
-				//then add accumulated snow
-				positionWorldSpace.y += AccumulationDelta * _DeformationSacle * _SnowCameraZScale * 1.5;
-				//if there is no deformation, then try to make a trail
-				positionWorldSpace.y += HasDeformation?0: max(0, decodeElevation(SnowDeformationInfo.g));
+				if (_EnabldeDeformation > 0)
+				{
+					//first get deformation Height and compare it with snow height, make a deformation
+					positionWorldSpace.y -= Delta* _DeformationSacle * _SnowCameraZScale;
+					//then add accumulated snow
+					positionWorldSpace.y += AccumulationDelta * _DeformationSacle * _SnowCameraZScale * 1.5;
+					//if there is no deformation, then try to make a trail
+					positionWorldSpace.y += HasDeformation?0: max(0, decodeElevation(SnowDeformationInfo.g));
+				}
 
 				//also have deformation delta and elevation dis as a texture coord
 				o.Delta.x = lerp(1, 0, Delta * 2);
@@ -245,7 +250,7 @@ Shader "Snow/SnowMeshSimple"
 				float3 T = normalize(i.tangentWS);
 				float3 B = cross(N, T);
 				float3x3 TtoW = float3x3(T, B, N);
-				float4 normalTS = tex2D(_NormalMapTex, i.uv);
+				float4 normalTS = tex2D(_NormalMapTex, i.uv * 20);
 				float3 normalWS = mul(normalize(UnpackNormal(normalTS)), TtoW);
 				//normalWS = i.normalWS;
 
