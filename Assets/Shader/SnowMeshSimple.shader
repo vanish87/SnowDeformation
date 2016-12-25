@@ -47,7 +47,7 @@ Shader "Snow/SnowMeshSimple"
 			#pragma enable_d3d11_debug_symbols
 			#pragma target 3.0
 
-			#pragma vertex vert1
+			#pragma vertex vert
 			#pragma fragment frag
 			
 
@@ -95,7 +95,7 @@ Shader "Snow/SnowMeshSimple"
 
 			float _EnabldeDeformation;
 
-			v2f vert1(appdata v)
+			v2f vert(appdata v)
 			{
 				v2f o;
 				float4 positionWorldSpace = mul(unity_ObjectToWorld, v.vertex);
@@ -146,96 +146,6 @@ Shader "Snow/SnowMeshSimple"
 
 
 				o.tangentWS = normalize(mul(unity_ObjectToWorld, float4(v.tangent.xyz, 0.0)).xyz);
-				return o;
-			}
-
-			v2f vert(appdata v)
-			{
-				v2f o;
-				float4 positionWorldSpace = mul(unity_ObjectToWorld, v.vertex);
-				//Object to world space is affine transform, the Inverse Transpose Matrix is equal to itself<=>(M-1)T = M
-				float3 normalWorldSpace = mul(unity_ObjectToWorld, v.normal);
-
-				float3 heightUV		= TransfromToTextureCoord(positionWorldSpace, _SnowCameraMatrix, _SnowCameraSize);
-				float3 accuHeightUV = TransfromToTextureCoord(positionWorldSpace, _SnowAccumulationCameraMatrix, _SnowCameraSize);
-
-				//Extract info from 2 height map texture
-				float4 SnowDeformationInfo	 = tex2Dlod(_SnowHeightMap, float4(heightUV.xy, 0, 0));
-				float4 SnowAccumulationInfo  = tex2Dlod(_SnowAccumulationMap, float4(accuHeightUV.xy, 0, 0));
-
-				float  SnowDeformationHeight = SnowDeformationInfo.r * _SnowCameraZScale;
-				float  SnowObjectHeight = SnowDeformationInfo.g;
-				float  SnowElevationHeight = SnowDeformationInfo.g;
-				float  SnowElevationRatio = SnowDeformationInfo.a;
-
-				bool IsSnowCovered = SnowAccumulationInfo.a > 0;
-				float SnowAccumulationHeight  = IsSnowCovered?(1-SnowAccumulationInfo.a) * _SnowCameraZScale:0;
-				float3 SnowAccumulationNormal = (SnowAccumulationInfo.rgb * 2) - 1;
-
-				float SnowMeshHeight = abs(heightUV.z);
-
-
-				float Delta = 0;
-
-				//caculate snow height delta
-				if (IsSnowCovered)
-				{
-					Delta = max(SnowAccumulationHeight - SnowMeshHeight, 0);
-					Delta = Delta > 3 ? -1: Delta;
-					float SnowDifference = dot(SnowAccumulationNormal, _SnowDirection);
-					if (SnowDifference>  _SticknessCos)
-					{
-						positionWorldSpace.y += Delta;
-						positionWorldSpace.xyz += SnowAccumulationNormal.xyz * _AccumulationSacle.xyz * _SnowDirection;
-						//blend object normal and snow mesh normal
-						normalWorldSpace = BlendNormal(SnowAccumulationNormal, normalWorldSpace);
-					}
-
-					o.Delta.x = clamp(Delta / (_SnowCameraZScale * 0.5), 0, 0.5);
-
-					//defines alpha chanel
-					//o.Delta.z = (SnowDifference + 1) * 0.5;
-
-					//debug
-					o.normalObject = SnowAccumulationNormal;
-				}
-				else
-				{
-					Delta = max(SnowMeshHeight - SnowDeformationHeight, 0);
-
-					//To modify vertex and add snow deformation to this object
-					positionWorldSpace.y -= Delta* _DeformationSacle;
-
-					o.Delta.x = clamp(-Delta*2 / (_SnowCameraZScale * 0.5), -0.5, 0);
-					o.Delta.z = (dot(normalWorldSpace, _SnowDirection.xyz) + 1) * 0.5;
-				}
-
-				if (SnowElevationHeight > 0)
-				{
-					positionWorldSpace.y += decodeElevation(SnowElevationHeight) * 10;
-					//o.Delta.x = clamp(SnowElevationHeight*2, 0, 0.5);
-					//o.Delta.y = SnowElevationHeight * 5;
-				}		
-
-				if (SnowElevationRatio > 0)
-				{
-					//normalWorldSpace.y *= 1 / o.Delta.y;
-					o.Delta.y = 1 - SnowElevationRatio;
-					//o.Delta.y *= SnowElevationHeight * 20;
-				}
-
-
-				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
-				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				o.positionWS = positionWorldSpace;
-				o.normalWS	 = normalWorldSpace;
-				o.heightMapUV = accuHeightUV.xy;
-				//o.normalVS = mul(UNITY_MATRIX_V, normalWorldSpace);
-				//o.positionVS = mul(UNITY_MATRIX_V, positionWorldSpace);
-
-
-				o.tangentWS  = normalize(mul(unity_ObjectToWorld, float4(v.tangent.xyz, 0.0)).xyz);
-				//o.binormalWS = normalize(cross(normalWorldSpace, o.tangentWS)	* v.tangent.w); // tangent.w is specific to Unity
 				return o;
 			}
 
