@@ -1,6 +1,7 @@
 ﻿
 sampler2D _SnowShadeMapTex;
 sampler2D _SnowNormalMapTex;
+float	  _SnowNormalMapScale;
 sampler2D _SnowSpecularMapTex;
 sampler2D _SnowSpecularNoiseTex;
 sampler2D _SnowSpecularGlitTex;

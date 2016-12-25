@@ -19,6 +19,11 @@
 		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 2
 		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 0.3
 		_BlinnSpecularPower("Blinn Specular Power", Range(0, 200)) = 5
+		
+		_ShadingBlendScale("Shading blend scale", Range(0, 1)) = 0.4
+		_ShadingEnergyPreserve("Shading Energy Preserve", Range(0, 1)) = 0.4
+		_AmbientColor("Ambient Color", Color) = (1, 1, 1, 255)
+		_DiffuseShadeColor("Diffuse Shade Color", Color) = (102, 220, 250, 255)
 
 		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
 		_NoiseMin("Min ", Float) = 2.5
@@ -62,9 +67,9 @@
 				float4 positionWorldSpace = mul(unity_ObjectToWorld, v.vertex);
 				//Object to world space is affine transform, the Inverse Transpose Matrix is equal to itself<=>(M-1)T = M
 				float4 normalWorldSpace   = mul(unity_ObjectToWorld, v.normal);
-				if (dot(normalWorldSpace, _SnowDirection.xyz) >= lerp(1, -1, (_Snow * 2) / 3))
+				if (dot(normalWorldSpace, _SnowDirection.xyz) >= lerp(1, -1, (_Snow * 0.7)))//covers 70 percent of object
 				{
-					positionWorldSpace.xyz += float3(0.5, 1, 0.5) * (_SnowDirection.xyz + normalWorldSpace) * _SnowDepth * _Snow * 10;
+					positionWorldSpace.xyz += float3(0.5, 1, 0.5) * (_SnowDirection.xyz + normalWorldSpace) * _SnowDepth * _Snow;
 				}
 
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
@@ -87,8 +92,8 @@
 
 				float3 normalDir = normalize(UnpackNormal(tex2D(_NormalMapTex, i.uv)));
 				float3 snowNormal = normalize(UnpackNormal(tex2D(_SnowNormalMapTex, i.uv)));
-				//normalDir = BlendNormal(normalDir, snowNormal);
-				normalDir = snowNormal;
+				normalDir = BlendNormal(normalDir, snowNormal);
+				normalDir = normalDir;
 
 				float3 objectNormalWS =  normalize(mul(float4(normalDir,0), TtoW));
 
@@ -104,14 +109,14 @@
 				//not used
 				float4 snowSpecularGlit = tex2D(_SnowSpecularGlitTex, i.uv);
 
-				col = CalLighting_OrenNayarBlinn(objectNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
+				col = CalLighting_OrenNayarBlinn(objectNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower, difference);
 
 				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv);
 				float3 viewDir = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);
 				float SpecularNoise = SampleNosie(_SnowSpecularNoiseTex, viewDir, i.uv);
-				if (SpecularNoise > 0 && difference > 0.99)
+				if (SpecularNoise > 0 && difference > 0)
 				{
-					col.rgb *= SpecularNoise + 0.5;
+					col.rgb *= SpecularNoise + 0.8;
 				}
 				return col;
 			}

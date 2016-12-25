@@ -21,7 +21,7 @@ float _ShadingEnergyPreserve = 0.4;
 
 //http://mimosa-pudica.net/improved-oren-nayar.html
 //http://shaderjvo.blogspot.jp/2011/08/van-ouwerkerks-rewrite-of-oren-nayar.html
-float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, float3 albedo, float3 shadingColor)
+float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, float3 albedo, float3 shadingColor, float shdadingCorlorScale)
 {
 	float roughness = sigma;
 	float roughness2 = roughness*roughness;
@@ -42,7 +42,7 @@ float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, fl
 
 	float result = (cos_theta.x * (oren_nayar.x + oren_nayar.y * diffuse_oren_nayar));
 
-	return (albedo * result * (1 - (_ShadingBlendScale * _ShadingEnergyPreserve)) ) + ((1- result) * _ShadingBlendScale * shadingColor);
+	return (albedo * result * (1 - (_ShadingBlendScale * _ShadingEnergyPreserve)) ) + ((1- result) * _ShadingBlendScale * shadingColor * shdadingCorlorScale);
 }
 
 float SchlickFresnelWithN(float n, float3 halfVec, float3 viewDir/*or LightDir*/)
@@ -93,7 +93,8 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float3 position, //world pos
 	float3 diffuseAlbedo,
 	float3 specularAlbedo,
-	float specularPower)
+	float specularPower,
+	float shdadingCorlorScale = 0)
 {
 	float3 viewDir = normalize(_WorldSpaceCameraPos - position);
 	float3 lightDir = normalize(float3(1, 1, 0));// normalize(_WorldSpaceLightPos0.xyz);
@@ -114,7 +115,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	//half is correct term.
 	float fresnel = SchlickFresnelWithN(refractiveIndex, halfVec, viewDir);
 	//diffuse term is OrenNayar model
-	float3 diffuse =  OrenNayar(lightDir, viewDir, normal, roughness, diffuseAlbedo, _DiffuseShadeColor);
+	float3 diffuse =  OrenNayar(lightDir, viewDir, normal, roughness, diffuseAlbedo, _DiffuseShadeColor, shdadingCorlorScale);
 	diffuse *= (1.0f -  (specularAlbedo * fresnel));
 
 	//specular term is BlinnPhong model

@@ -4,6 +4,7 @@ Shader "Snow/SnowMeshSimple"
 	{
 		_MainTex("Snow Albedo", 2D) = "white" {}
 		_NormalMapTex("Snow Normal Map", 2D) = "white" {}
+		_SnowNormalMapScale("Snow Normal Map Scale",Range(1, 30)) = 1
 		_SnowSpecularMapTex("Snow Specular Map", 2D) = "white" {}
 		_SnowSpecularNoiseTex("Snow Specular Noise", 2D) = "white" {}
 		_Wetness("Wetness", Range(0, 0.5)) = 0.3
@@ -160,7 +161,7 @@ Shader "Snow/SnowMeshSimple"
 				float3 T = normalize(i.tangentWS);
 				float3 B = cross(N, T);
 				float3x3 TtoW = float3x3(T, B, N);
-				float4 normalTS = tex2D(_NormalMapTex, i.uv * 20);
+				float4 normalTS = tex2D(_NormalMapTex, i.uv * _SnowNormalMapScale);
 				float3 normalWS = mul(normalize(UnpackNormal(normalTS)), TtoW);
 				//normalWS = i.normalWS;
 
@@ -181,7 +182,7 @@ Shader "Snow/SnowMeshSimple"
 				//snowSpecularColor = float4(0, 0, 1,1);
 				//snowShadeColor = float4(1, 1, 1, 1);
 				//if(snowSpecularColor.r > 0.5) snowSpecularColor *= 2;
-				final = CalLighting_OrenNayarBlinn(normalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower);
+				final = CalLighting_OrenNayarBlinn(normalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower, difference);
 
 				float SpecularNoise = SampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
 				if (SpecularNoise > 0)

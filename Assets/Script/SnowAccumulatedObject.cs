@@ -6,7 +6,7 @@ using System.Collections;
 //SnowCoveredObject will render normal and depth of objects with RenderNormalAndDepth shader, 
 //then render object for main camera with SnowObject shader
 
-public class SnowCoveredObject : MonoBehaviour {
+public class SnowAccumulatedObject : MonoBehaviour {
 
     public Camera snowAccumulationCamera;
 
