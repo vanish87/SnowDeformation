@@ -131,12 +131,16 @@ Shader "Snow/SnowMeshSimple"
 
 				//also have deformation delta and elevation dis as a texture coord
 				o.Delta.x = lerp(1, 0, Delta * 2);
-				o.Delta.y = decodeFromColorSpace(SnowDeformationInfo.b);
+				o.Delta.y = 0;
 				o.Delta.z = AccumulationDelta;
 				
 				if (AccumulationDelta > 0 && !HasDeformation)
 				{
-					normalWorldSpace.xyz = BlendNormal(normalWorldSpace.xyz, SnowAccumulationNormal);
+					normalWorldSpace.xyz = BlendNormal(normalWorldSpace.xyz, SnowAccumulationNormal); 
+				}
+				if (!HasDeformation && decodeElevation(SnowDeformationInfo.g) > 0)
+				{
+					o.Delta.y = decodeFromColorSpace(SnowDeformationInfo.b);
 				}
 
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
@@ -207,6 +211,7 @@ Shader "Snow/SnowMeshSimple"
 					final.rgb *= x;
 				}
 				//final.a *= normalWS.y;
+				//final.rgb = i.Delta.y;
 				//final.rgb = i.Delta.y;// < 1 && i.Delta.y  > 0 ? i.Delta.y : 0;
 				//final.rgb *= (cos(4 * PI*i.Delta.y) + 1.25) *0.5;
 				//final.a = i.Delta.z * 3;

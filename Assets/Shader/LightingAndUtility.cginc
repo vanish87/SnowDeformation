@@ -189,7 +189,9 @@ float4 UpdateSnowInfo(float4 currentInfo, float4 newInfo)
 {
 	float deformationHeight= min(currentInfo.x, newInfo.x);
 	float elevationHeight  = max(currentInfo.y, newInfo.y);
-	float elevationDis	   = min(currentInfo.z, newInfo.z);
+	//TODO: set default to 0
+	float elevationDis = currentInfo.z < 1 ? max(currentInfo.z, newInfo.z) : max(newInfo.z, 0);
+	//elevationDis = newInfo.z < 0 ? elevationDis :0;
 
 	float4 ret = float4(0, 0, 0, 0);
 	ret.r = deformationHeight;
@@ -222,6 +224,11 @@ float2 CalculateElevation(float snowHeight, float objectHeight, float deformatio
 	//0.7 = sqrt(2) * 0.5;
 	//this equation should have two roots, one is (0,0), another is (sqrt(2), 0) and the vertex is (sqrt(2)/2, 1)
 	elevation = (-2 * pow((ratio - 0.7), 2) + 1) * height;
-	//elevationDistance normalize to ElevationHeightScale
-	return float2(ratio, elevation);
+	//ratio normalize to sqrt(2) => /1.4 => *0.714
+	return float2(ratio * 0.714, elevation);
+}
+
+float MapTextureCoordToShadeColor()
+{
+
 }
