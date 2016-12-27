@@ -22,8 +22,8 @@
 		
 		_ShadingBlendScale("Shading blend scale", Range(0, 1)) = 0.4
 		_ShadingEnergyPreserve("Shading Energy Preserve", Range(0, 1)) = 0.4
-		_AmbientColor("Ambient Color", Color) = (1, 1, 1, 255)
-		_DiffuseShadeColor("Diffuse Shade Color", Color) = (102, 220, 250, 255)
+		_AmbientColor("Ambient Color", Color) = (0, 0, 0, 1)
+		_DiffuseShadeColor("Diffuse Shade Color", Color) = (0.4, 0.8627, 0.98, 1)
 
 		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)
 		_NoiseMin("Min ", Float) = 2.5
