@@ -143,6 +143,10 @@ Shader "Snow/SnowMeshSimple"
 				{
 					o.Delta.y = decodeFromColorSpace(SnowDeformationInfo.b);
 				}
+				else if(HasDeformation)
+				{
+					o.Delta.y = 1;
+				}
 
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);

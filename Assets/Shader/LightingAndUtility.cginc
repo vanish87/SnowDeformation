@@ -234,8 +234,7 @@ float4 UpdateSnowInfo(float4 currentInfo, float4 newInfo)
 {
 	float deformationHeight= min(currentInfo.x, newInfo.x);
 	float elevationHeight  = max(currentInfo.y, newInfo.y);
-	//TODO: set default to 0
-	float elevationDis = currentInfo.z < 1 ? max(currentInfo.z, newInfo.z) : max(newInfo.z, 0);
+	float elevationDis	   = max(currentInfo.z, newInfo.z);
 	//elevationDis = newInfo.z < 0 ? elevationDis :0;
 
 	float4 ret = float4(0, 0, 0, 0);
