@@ -18,6 +18,7 @@ float _RefractiveIndex = 1;
 float _ArtistElevationScale = 1;
 float _ShadingBlendScale = 0.4;
 float _ShadingEnergyPreserve = 0.4;
+float _ShadingHG = 0.4;
 
 //http://mimosa-pudica.net/improved-oren-nayar.html
 //http://shaderjvo.blogspot.jp/2011/08/van-ouwerkerks-rewrite-of-oren-nayar.html
@@ -66,6 +67,15 @@ float BlinnPhongDistribution(float3 normal, float3 halfVec, float alpha)
 {
 	float normalizeTerm = (alpha + 2) / (2 * PI);
 	return normalizeTerm * pow(max(0,dot(normal, halfVec)), alpha);
+}
+
+float HenyeyGreensteinPhaseFunction(float3 viewDir, float3 lightDir, float g)
+{
+	float ret = 0;
+	float gSqur = g * g;
+	float cosTheta = dot(viewDir, lightDir);
+	ret = (1 / (4 * PI)) * ((1 - gSqur) / pow(1 + gSqur - ((2 * g) * cosTheta), 1.5));
+	return ret;
 }
 
 
@@ -122,6 +132,41 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float3 specular = specularAlbedo * CalBlinnPhong(normal, viewDir, lightDir, false, specularPower);
 	//they are combined with fresnel term
 	specular *= fresnel;
+
+	float3 acc_color = (_AmbientColor + diffuse + specular);
+	litColor = litColor + float4(acc_color, 1.0f);
+
+	return litColor;
+}
+
+float4 CalLighting_OrenNayarBlinnNew(float3 normal,
+	float3 position, //world pos
+	float3 diffuseAlbedo,
+	float3 specularAlbedo,
+	float specularPower,
+	float shdadingCorlorScale = 0)
+{
+	float3 viewDir = normalize(_WorldSpaceCameraPos - position);
+	float3 lightDir = normalize(float3(1, 1, 0));// normalize(_WorldSpaceLightPos0.xyz);
+	normal = normalize(normal);
+
+	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	float roughness = _Roughness;
+	//overwrite invalid _Roughness
+	if (_Roughness > 1)
+	{
+		roughness = sqrt(2 / (2 + specularPower));
+	}
+	float refractiveIndex = _RefractiveIndex;
+
+	float3 halfVec = normalize(viewDir + lightDir);
+	//diffuse term is OrenNayar model
+	float3 diffuse = OrenNayar(lightDir, viewDir, normal, roughness, diffuseAlbedo, _DiffuseShadeColor, shdadingCorlorScale);
+	diffuse += _DiffuseShadeColor * HenyeyGreensteinPhaseFunction(viewDir, lightDir, _ShadingHG);
+
+	//specular term is BlinnPhong model
+	float3 specular = specularAlbedo * CalBlinnPhong(normal, viewDir, lightDir, true, specularPower);
 
 	float3 acc_color = (_AmbientColor + diffuse + specular);
 	litColor = litColor + float4(acc_color, 1.0f);

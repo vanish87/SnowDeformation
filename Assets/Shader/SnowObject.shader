@@ -109,7 +109,7 @@
 				//not used
 				float4 snowSpecularGlit = tex2D(_SnowSpecularGlitTex, i.uv);
 
-				col = CalLighting_OrenNayarBlinn(objectNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower, difference);
+				col = CalLighting_OrenNayarBlinnNew(objectNormalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower, difference);
 
 				float4 snowSpecularNoise = tex2D(_SnowSpecularNoiseTex, i.uv);
 				float3 viewDir = normalize(_WorldSpaceCameraPos - i.positionWS.xyz);

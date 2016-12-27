@@ -24,7 +24,8 @@ Shader "Snow/SnowMeshSimple"
 		_BlinnSpecularPower("Blinn Specular Power", Range(0, 500)) = 30
 
 		_ShadingBlendScale("Shading blend scale", Range(0, 1)) = 0.4
-		_ShadingEnergyPreserve("Shading Energy Preserve", Range(0, 1)) = 0.4
+			_ShadingEnergyPreserve("Shading Energy Preserve", Range(0, 1)) = 0.4
+			_ShadingHG("HG Parameter", Range(-1, 1)) = 0.4
 		_AmbientColor("Ambient Color", Color) = (1, 1, 1, 255)
 		_DiffuseShadeColor("Diffuse Shade Color", Color) = (102, 220, 250, 255)
 
@@ -186,7 +187,7 @@ Shader "Snow/SnowMeshSimple"
 				//snowSpecularColor = float4(0, 0, 1,1);
 				//snowShadeColor = float4(1, 1, 1, 1);
 				//if(snowSpecularColor.r > 0.5) snowSpecularColor *= 2;
-				final = CalLighting_OrenNayarBlinn(normalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower, difference);
+				final = CalLighting_OrenNayarBlinnNew(normalWS, i.positionWS.xyz, snowShadeColor, snowSpecularColor, _BlinnSpecularPower, difference);
 
 				float SpecularNoise = SampleNosie(_SnowSpecularNoiseTex, pos_eye, i.uv);
 				if (SpecularNoise > 0)
