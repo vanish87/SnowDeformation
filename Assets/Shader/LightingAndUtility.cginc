@@ -1,6 +1,7 @@
 ﻿
 static const float ElevationScale = 50;
 static const float PI = 3.141592653;
+static const float E = 2.7182818;
 
 float _FrenalParameter;
 float _FrenalBlending;
@@ -46,11 +47,18 @@ float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, fl
 	return (albedo * result * (1 - (_ShadingBlendScale * _ShadingEnergyPreserve)) ) + ((1- result) * _ShadingBlendScale * shadingColor * shdadingCorlorScale);
 }
 
+//reflection R
 float SchlickFresnelWithN(float n, float3 halfVec, float3 viewDir/*or LightDir*/)
 {
 	float3 FresnelFactor = pow((1 - n) / (1 + n), 2);	
 	float  VdotH = dot(halfVec, viewDir);
 	return FresnelFactor + ((1 - FresnelFactor) * pow(1 - VdotH, 5));
+}
+
+//refrection T
+float FresnelT(float n, float3 normal, float3 In)
+{
+	return 1 - SchlickFresnelWithN(n, normal, In);
 }
 
 float CookTorranceGeometry(float3 normal, float3 halfVec, float3 viewDir, float3 lightDir)
@@ -69,15 +77,57 @@ float BlinnPhongDistribution(float3 normal, float3 halfVec, float alpha)
 	return normalizeTerm * pow(max(0,dot(normal, halfVec)), alpha);
 }
 
-float HenyeyGreensteinPhaseFunction(float3 viewDir, float3 lightDir, float g)
+float HenyeyGreensteinPhaseFunction(float3 inDir, float3 outDir, float g)
 {
 	float ret = 0;
 	float gSqur = g * g;
-	float cosTheta = dot(viewDir, lightDir);
+	float cosTheta = dot(inDir, outDir);
 	ret = (1 / (4 * PI)) * ((1 - gSqur) / pow(1 + gSqur - ((2 * g) * cosTheta), 1.5));
 	return ret;
 }
 
+float ReducedIntensity(float s, float sigmaT)
+{
+	return pow(E, -sigmaT*s);
+}
+
+float IntensityAtOmigaDir(float phiX, float dir, float sigmaTReduced, float3 Nebla)
+{
+	float D = 1 / (3 * sigmaTReduced);
+	float3 Ex = -D * Nebla * phiX;
+	return (1 / (4 * PI) * phiX) + (3 / (4* PI) * dot(dir, Ex));
+}
+
+float SingleScatterTerm(float l, float v, float g/*HG phase g*/, float n, float sigmaS, float sigmaA)
+{
+	float3 halfVec = normalize(v + l);
+
+	float F = FresnelT(n, halfVec, l) * FresnelT(n, halfVec, v);
+
+	float sigmaT = sigmaA + sigmaS;
+	float sigmaSReduced = sigmaS * (1 - g);
+	float sigmaTReduced = sigmaA + sigmaSReduced;
+
+	float3 refractedIn = l;//refract(l, halfVec, n);
+	float3 refractedOut = float3(0, 0, 0);
+
+	float distanceToLight = 1;
+	float phiX = 1;
+	float3 Nebla;
+
+	float Q1 = 0;
+	for (int i = 0; i < 50; ++i)
+	{
+		//random a light
+		float3 dir = float3(1, 0, 1);
+		refractedOut = dir;
+		float phase = HenyeyGreensteinPhaseFunction(refractedIn, refractedOut, g);
+		float Lri = ReducedIntensity(distanceToLight, sigmaT) * IntensityAtOmigaDir(phiX, refractedOut, sigmaTReduced, Nebla);
+		float Q = sigmaS * F * phase * Lri;
+		Q1 += Q;
+	}
+	return Q1;
+}
 
 //http://simonstechblog.blogspot.jp/2011/12/microfacet-brdf.html
 //http://blog.selfshadow.com/publications/s2012-shading-course/hoffman/s2012_pbs_physics_math_notes.pdf
@@ -168,6 +218,29 @@ float4 CalLighting_OrenNayarBlinnNew(float3 normal,
 	//specular term is BlinnPhong model
 	float3 specular = specularAlbedo * CalBlinnPhong(normal, viewDir, lightDir, true, specularPower);
 
+	float3 acc_color = (_AmbientColor + diffuse + specular);
+	litColor = litColor + float4(acc_color, 1.0f);
+
+	return litColor;
+}
+
+
+
+float4 CalLighting_BSSRDF(float3 normal,
+	float3 position, //world pos
+	float3 diffuseAlbedo,
+	float3 specularAlbedo,
+	float specularPower)
+{
+	float3 viewDir = normalize(_WorldSpaceCameraPos - position);
+	float3 lightDir = normalize(float3(1, 1, 0));// normalize(_WorldSpaceLightPos0.xyz);
+	normal = normalize(normal);
+
+
+
+	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f); 
+	float3 diffuse, specular;
+	
 	float3 acc_color = (_AmbientColor + diffuse + specular);
 	litColor = litColor + float4(acc_color, 1.0f);
 
