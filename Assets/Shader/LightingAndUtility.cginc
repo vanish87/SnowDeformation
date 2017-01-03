@@ -24,7 +24,7 @@ float _ShadingHG = 0.4;
 float4x4 _LightDepthCameraMatrix;
 float	 _LightDepthCameraZScale;
 float	 _SubSurfaceSigma = 0.5;
-sampler2D _LightDepthMap;
+sampler2D _LightDepthTex;
 
 float3 TransfromToTextureCoord(float4 Position, float4x4 CameraMatirx, float CameraScale);
 
@@ -109,7 +109,7 @@ float IntensityAtOmigaDir(float phiX, float dir, float sigmaTReduced, float3 Neb
 float SubsurfaceDepthDelta(float pos)
 {
 	float3 heightUV = TransfromToTextureCoord(pos, _LightDepthCameraMatrix, _LightDepthCameraZScale);
-	float lightPozitionDepth = tex2D(_LightDepthMap, heightUV.xy).r;
+	float lightPozitionDepth = tex2D(_LightDepthTex, heightUV.xy).r;
 
 	float Delta = (-heightUV.z / _LightDepthCameraZScale) - lightPozitionDepth;
 	return Delta;

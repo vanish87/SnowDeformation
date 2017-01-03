@@ -10,11 +10,13 @@ public class SnowMeshRendering : MonoBehaviour {
 
     public RenderTexture AccumulationTex;
     public RenderTexture DeformationTex;
+    public RenderTexture LightDepthTex;
 
     public Material snowMaterial;
 
     public Camera snowHeighMapCamera;
     public Camera snowAccumulationMapCamera;
+    public Camera lightDepthCamera;
 
 
     [Range(0, 1)]
@@ -25,9 +27,11 @@ public class SnowMeshRendering : MonoBehaviour {
     {
         snowHeighMapCamera = GameObject.Find("SnowDeformationCamera").GetComponent<Camera>();
         snowAccumulationMapCamera = GameObject.Find("SnowAccumulationCamera").GetComponent<Camera>();
-        
+        lightDepthCamera = GameObject.Find("LightDepthCamera").GetComponent<Camera>();
+
         AccumulationTex = snowAccumulationMapCamera.GetComponent<SnowAccumulationCameraScript>().snowNormalsAndHeightTex;
         DeformationTex = snowHeighMapCamera.GetComponent<SnowDeformationCameraScript>().snowHeightTex;
+        LightDepthTex = lightDepthCamera.GetComponent<LightlightDepthCameraScript>().lightDepthTex;
 
         if (snowMaterial == null)
         {
@@ -36,6 +40,7 @@ public class SnowMeshRendering : MonoBehaviour {
 
         snowMaterial.SetTexture("_SnowAccumulationMap", AccumulationTex);
         snowMaterial.SetTexture("_SnowHeightMap", DeformationTex);
+        snowMaterial.SetTexture("_LightDepthTex", LightDepthTex);
 
         GetComponent<Renderer>().material = snowMaterial;
     }    
@@ -49,6 +54,11 @@ public class SnowMeshRendering : MonoBehaviour {
             snowMaterial.SetMatrix("_SnowAccumulationCameraMatrix", snowAccumulationMapCamera.worldToCameraMatrix);
             snowMaterial.SetFloat("_SnowCameraSize", snowHeighMapCamera.orthographicSize);
             snowMaterial.SetFloat("_SnowCameraZScale", snowHeighMapCamera.farClipPlane - snowHeighMapCamera.nearClipPlane);
+            if (lightDepthCamera != null)
+            {
+                snowMaterial.SetMatrix("_LightDepthCameraMatrix", lightDepthCamera.worldToCameraMatrix);
+                snowMaterial.SetFloat("_LightDepthCameraZScale", lightDepthCamera.farClipPlane - lightDepthCamera.nearClipPlane);
+            }
         }
         snowMaterial.SetFloat("_EnabldeDeformation", enabldeDeformation);
 
