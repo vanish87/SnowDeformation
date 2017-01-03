@@ -199,7 +199,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	float subSurfaceDelta = SubsurfaceDepthDelta(position);
 	float3 subSurfaceColor = exp(subSurfaceDelta * _SubSurfaceSigma) * lightColor;
 	//TODO uncomment this if light depth camera is ready
-	//diffuse *= subSurfaceColor;
+	//diffuse *= subSurfaceColor;//not good for snow mesh
 
 	//specular term is BlinnPhong model
 	float3 specular = specularAlbedo * CalBlinnPhong(normal, viewDir, lightDir, false, specularPower);
