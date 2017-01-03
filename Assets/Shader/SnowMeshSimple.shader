@@ -28,6 +28,8 @@ Shader "Snow/SnowMeshSimple"
 		_ShadingHG("HG Parameter", Range(-1, 1)) = 0.4
 		_AmbientColor("Ambient Color", Color) = (1, 1, 1, 255)
 		_DiffuseShadeColor("Diffuse Shade Color", Color) = (102, 220, 250, 255)
+		
+		_SubSurfaceSigma("SubSurfaceSigma Parameter", Range(0, 10)) = 2
 
 
 		_Offset("Ratio 1", Vector) = (0.005, -0.006, 0.007, 0.008)

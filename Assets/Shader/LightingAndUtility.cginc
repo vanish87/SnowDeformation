@@ -23,7 +23,7 @@ float _ShadingHG = 0.4;
 
 float4x4 _LightDepthCameraMatrix;
 float	 _LightDepthCameraZScale;
-float	 _SubSurfaceSigma = 0.5;
+float	 _SubSurfaceSigma = 1;
 sampler2D _LightDepthTex;
 
 float3 TransfromToTextureCoord(float4 Position, float4x4 CameraMatirx, float CameraScale);
@@ -106,9 +106,9 @@ float IntensityAtOmigaDir(float phiX, float dir, float sigmaTReduced, float3 Neb
 }
 
 //subsurface approximation from light depth
-float SubsurfaceDepthDelta(float pos)
+float SubsurfaceDepthDelta(float3 pos)
 {
-	float3 heightUV = TransfromToTextureCoord(pos, _LightDepthCameraMatrix, _LightDepthCameraZScale);
+	float3 heightUV = TransfromToTextureCoord(float4(pos,1.0f), _LightDepthCameraMatrix, 50);
 	float lightPozitionDepth = tex2D(_LightDepthTex, heightUV.xy).r;
 
 	float Delta = (-heightUV.z / _LightDepthCameraZScale) - lightPozitionDepth;
@@ -197,7 +197,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	diffuse *= (1.0f -  (specularAlbedo * fresnel));
 
 	float subSurfaceDelta = SubsurfaceDepthDelta(position);
-	float3 subSurfaceColor = exp(-subSurfaceDelta * _SubSurfaceSigma) * lightColor;
+	float3 subSurfaceColor = exp(subSurfaceDelta * _SubSurfaceSigma) * lightColor;
 	//TODO uncomment this if light depth camera is ready
 	//diffuse *= subSurfaceColor;
 

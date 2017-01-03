@@ -18,6 +18,8 @@ public class SnowMeshRendering : MonoBehaviour {
     public Camera snowAccumulationMapCamera;
     public Camera lightDepthCamera;
 
+    private Renderer rend;
+
 
     [Range(0, 1)]
     public int enabldeDeformation = 1;
@@ -31,7 +33,7 @@ public class SnowMeshRendering : MonoBehaviour {
 
         AccumulationTex = snowAccumulationMapCamera.GetComponent<SnowAccumulationCameraScript>().snowNormalsAndHeightTex;
         DeformationTex = snowHeighMapCamera.GetComponent<SnowDeformationCameraScript>().snowHeightTex;
-        LightDepthTex = lightDepthCamera.GetComponent<LightlightDepthCameraScript>().lightDepthTex;
+        LightDepthTex = lightDepthCamera.GetComponent<LightDepthCameraScript>().lightDepthTex;
 
         if (snowMaterial == null)
         {
@@ -42,7 +44,8 @@ public class SnowMeshRendering : MonoBehaviour {
         snowMaterial.SetTexture("_SnowHeightMap", DeformationTex);
         snowMaterial.SetTexture("_LightDepthTex", LightDepthTex);
 
-        GetComponent<Renderer>().material = snowMaterial;
+        rend = GetComponent<Renderer>();
+        rend.material = snowMaterial;
     }    
     	
 	// Update is called once per frame
@@ -67,11 +70,20 @@ public class SnowMeshRendering : MonoBehaviour {
     void OnWillRenderObject()
     {
         //Debug.Log("render Snow Mesh");
+        if (Camera.current == lightDepthCamera)
+        {
+            rend.material = lightDepthCamera.GetComponent<LightDepthCameraScript>().material;
+        }
+        else
+        {
+            rend.material = snowMaterial;
 
-        AccumulationTex = snowAccumulationMapCamera.GetComponent<SnowAccumulationCameraScript>().snowNormalsAndHeightTex;
-        DeformationTex = snowHeighMapCamera.GetComponent<SnowDeformationCameraScript>().snowHeightTex;
+            AccumulationTex = snowAccumulationMapCamera.GetComponent<SnowAccumulationCameraScript>().snowNormalsAndHeightTex;
+            DeformationTex = snowHeighMapCamera.GetComponent<SnowDeformationCameraScript>().snowHeightTex;
 
-        snowMaterial.SetTexture("_SnowAccumulationMap", AccumulationTex);
-        snowMaterial.SetTexture("_SnowHeightMap", DeformationTex);
+            snowMaterial.SetTexture("_SnowAccumulationMap", AccumulationTex);
+            snowMaterial.SetTexture("_SnowHeightMap", DeformationTex);
+            snowMaterial.SetTexture("_LightDepthTex", LightDepthTex);
+        }
     }
 }

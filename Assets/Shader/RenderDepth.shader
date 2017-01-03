@@ -30,7 +30,8 @@
 				float4 col = float4(0,0,0,0);
 				float depthValue = i.vertex.z;
 				col.rgba	= depthValue;
-				//col.r = depthValue;
+				//col.r = 1;
+				//col.gb = 0;
 				return col;
 			}
 			ENDCG

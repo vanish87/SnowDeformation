@@ -4,7 +4,7 @@ using System.Collections;
 [ExecuteInEditMode]
 [RequireComponent(typeof(Camera))]
 
-public class LightlightDepthCameraScript : MonoBehaviour
+public class LightDepthCameraScript : MonoBehaviour
 {
     public Shader lightDepthShader;
 
