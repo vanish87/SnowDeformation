@@ -21,6 +21,13 @@ float _ShadingBlendScale = 0.4;
 float _ShadingEnergyPreserve = 0.4;
 float _ShadingHG = 0.4;
 
+float4x4 _LightDepthCameraMatrix;
+float	 _LightDepthCameraZScale;
+float	 _SubSurfaceSigma = 0.5;
+sampler2D _LightDepthMap;
+
+float3 TransfromToTextureCoord(float4 Position, float4x4 CameraMatirx, float CameraScale);
+
 //http://mimosa-pudica.net/improved-oren-nayar.html
 //http://shaderjvo.blogspot.jp/2011/08/van-ouwerkerks-rewrite-of-oren-nayar.html
 float3 OrenNayar(float3 lightDir, float3 viewDir, float3 normal, float sigma, float3 albedo, float3 shadingColor, float shdadingCorlorScale)
@@ -55,7 +62,7 @@ float SchlickFresnelWithN(float n, float3 halfVec, float3 viewDir/*or LightDir*/
 	return FresnelFactor + ((1 - FresnelFactor) * pow(1 - VdotH, 5));
 }
 
-//refrection T
+//refraction T
 float FresnelT(float n, float3 normal, float3 In)
 {
 	return 1 - SchlickFresnelWithN(n, normal, In);
@@ -98,7 +105,17 @@ float IntensityAtOmigaDir(float phiX, float dir, float sigmaTReduced, float3 Neb
 	return (1 / (4 * PI) * phiX) + (3 / (4* PI) * dot(dir, Ex));
 }
 
-float SingleScatterTerm(float l, float v, float g/*HG phase g*/, float n, float sigmaS, float sigmaA)
+//subsurface approximation from light depth
+float SubsurfaceDepthDelta(float pos)
+{
+	float3 heightUV = TransfromToTextureCoord(pos, _LightDepthCameraMatrix, _LightDepthCameraZScale);
+	float lightPozitionDepth = tex2D(_LightDepthMap, heightUV.xy).r;
+
+	float Delta = (-heightUV.z / _LightDepthCameraZScale) - lightPozitionDepth;
+	return Delta;
+}
+
+float SingleScatterTerm(float3 l, float3 v, float g/*HG phase g*/, float n, float sigmaS, float sigmaA)
 {
 	float3 halfVec = normalize(v + l);
 
@@ -161,6 +178,7 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	normal = normalize(normal);
 
 	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float3 lightColor = float3(1.0f, 1.0f, 1.0f);
 
 	float roughness = _Roughness;
 	//overwrite invalid _Roughness
@@ -177,6 +195,11 @@ float4 CalLighting_OrenNayarBlinn(float3 normal,
 	//diffuse term is OrenNayar model
 	float3 diffuse =  OrenNayar(lightDir, viewDir, normal, roughness, diffuseAlbedo, _DiffuseShadeColor, shdadingCorlorScale);
 	diffuse *= (1.0f -  (specularAlbedo * fresnel));
+
+	float subSurfaceDelta = SubsurfaceDepthDelta(position);
+	float3 subSurfaceColor = exp(-subSurfaceDelta * _SubSurfaceSigma) * lightColor;
+	//TODO uncomment this if light depth camera is ready
+	//diffuse *= subSurfaceColor;
 
 	//specular term is BlinnPhong model
 	float3 specular = specularAlbedo * CalBlinnPhong(normal, viewDir, lightDir, false, specularPower);
