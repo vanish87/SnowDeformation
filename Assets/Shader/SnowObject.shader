@@ -66,7 +66,7 @@
 				v2f o;
 				float4 positionWorldSpace = mul(unity_ObjectToWorld, v.vertex);
 				//Object to world space is affine transform, the Inverse Transpose Matrix is equal to itself<=>(M-1)T = M
-				float4 normalWorldSpace   = mul(unity_ObjectToWorld, v.normal);
+				float4 normalWorldSpace   = UnityObjectToWorldNormal(v.normal);
 				if (dot(normalWorldSpace, _SnowDirection.xyz) >= lerp(1, -1, (_Snow * 0.7)))//covers 70 percent of object
 				{
 					positionWorldSpace.xyz += float3(0.5, 1, 0.5) * (_SnowDirection.xyz + normalWorldSpace) * _SnowDepth * _Snow;

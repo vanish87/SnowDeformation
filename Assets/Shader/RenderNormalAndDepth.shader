@@ -24,7 +24,7 @@
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.normalWS	 = mul(unity_ObjectToWorld, v.normal);
+				o.normalWS	 = UnityObjectToWorldNormal(v.normal);
 				return o;
 			}
 			float4 frag (v2f i) : SV_Target

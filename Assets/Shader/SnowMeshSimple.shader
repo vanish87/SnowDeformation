@@ -104,7 +104,7 @@ Shader "Snow/SnowMeshSimple"
 				v2f o;
 				float4 positionWorldSpace = mul(unity_ObjectToWorld, v.vertex);
 				//Object to world space is affine transform, the Inverse Transpose Matrix is equal to itself<=>(M-1)T = M
-				float3 normalWorldSpace = mul(unity_ObjectToWorld, v.normal);
+				float3 normalWorldSpace = UnityObjectToWorldNormal(v.normal);
 
 				float3 heightUV = TransfromToTextureCoord(positionWorldSpace, _SnowCameraMatrix, _SnowCameraSize);
 				float3 accuHeightUV = TransfromToTextureCoord(positionWorldSpace, _SnowAccumulationCameraMatrix, _SnowCameraSize);
