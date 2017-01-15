@@ -20,8 +20,8 @@ public class DynamicObject : MonoBehaviour
 
     [Range(1, 30f)]
     public float _DeformationScale = 10f;
-    [Range(1f, 25f)]
-    public float _ElevationTrailScale = 2.5f;
+    //[Range(1f, 25f)]
+    //public float _ElevationTrailScale = 2.5f;
     
     // Use this for initialization
     void Start()
@@ -52,7 +52,7 @@ public class DynamicObject : MonoBehaviour
             float cameraSpaceHeight = snowDeformationCamera.farClipPlane - snowDeformationCamera.nearClipPlane;
             renderHeightMapMat.SetFloat("_ObjectMinHeight", Mathf.Max(0.5f + (rend.bounds.min.y / cameraSpaceHeight), 0));
             renderHeightMapMat.SetFloat("_DeformationScale", 0.1f / _DeformationScale);
-            renderHeightMapMat.SetFloat("_ElevationTrailScale", _ElevationTrailScale);
+            //renderHeightMapMat.SetFloat("_ElevationTrailScale", _ElevationTrailScale);
             // keep object center in world space; it used with position of vertex in world space in shader.
             renderHeightMapMat.SetVector("_ObjectCenter", rend.bounds.center);
             //set render depth material
