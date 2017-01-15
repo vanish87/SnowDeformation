@@ -11,8 +11,6 @@ Shader "Snow/SnowMeshSimple"
 
 		_SnowDirection("Snow Direction", Vector) = (0,1,0)
 		_Snow("Snow Level", Range(0,1)) = 0
-		_SticknessCos("Stickness Value", Range(0, 1)) = 0.4
-		_AccumulationSacle("Accumulation Sacle", Vector) = (0,1,0, 0)
 
 		_DeformationSacle("Deformation Sacle", Range(0, 10)) = 1
 
@@ -88,9 +86,7 @@ Shader "Snow/SnowMeshSimple"
 			sampler2D _SnowAccumulationMap;
 
 			float4 _MainTex_ST;
-			float4 _AccumulationSacle;
 			float _DeformationSacle;
-			float _SticknessCos;
 			
 			float4x4 _SnowCameraMatrix;
 			float4x4 _SnowAccumulationCameraMatrix;

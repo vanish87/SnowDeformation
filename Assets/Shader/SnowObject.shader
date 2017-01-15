@@ -15,6 +15,7 @@
 		_SnowDirection("Snow Direction", Vector) = (0,1,0)
 		_SnowDepth("Snow Depth", Range(0,0.2)) = 0.1
 		_Wetness("Wetness", Range(0, 0.5)) = 0.3
+		_AccumulationSacle("Accumulation Scale", Vector) = (0,1,0, 0)
 
 		_RefractiveIndex("Frenal Refractive Index", Range(0, 20)) = 2
 		_Roughness("Oren Nayar Roughness", Range(0, 1)) = 0.3
@@ -60,6 +61,7 @@
 			sampler2D _MainTex;
 			sampler2D _NormalMapTex;
 
+			float4 _AccumulationSacle;
 
 			v2f vert (appdata_full v)
 			{
@@ -69,7 +71,7 @@
 				float3 normalWorldSpace   = UnityObjectToWorldNormal(v.normal);
 				if (dot(normalWorldSpace, _SnowDirection.xyz) >= lerp(1, -1, (_Snow * 0.7)))//covers 70 percent of object
 				{
-					positionWorldSpace.xyz += float3(0.5, 1, 0.5) * (_SnowDirection.xyz + normalWorldSpace) * _SnowDepth * _Snow;
+					positionWorldSpace.xyz += _AccumulationSacle * (_SnowDirection.xyz + normalWorldSpace) * _SnowDepth * _Snow;
 				}
 
 				o.vertex = mul(UNITY_MATRIX_VP, positionWorldSpace);
