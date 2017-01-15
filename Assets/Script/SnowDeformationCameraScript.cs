@@ -25,6 +25,8 @@ public class SnowDeformationCameraScript : MonoBehaviour
 
     [Range(0, 25f)]
     public float artistScale = 1.0f;
+    [Range(0, 10f)]
+    public float recoverSpeed = 0.5f;
 
     // Use this for initialization
     void Start()
@@ -83,7 +85,7 @@ public class SnowDeformationCameraScript : MonoBehaviour
         material.SetTexture("_CurrentDepthTexture", currentSnowHeight);
         material.SetTexture("_CurrentAccumulationTexture", AccumulationTex);
         material.SetTexture("_NewDepthTex", source);
-        material.SetFloat("_DeltaTime", Time.deltaTime);
+        material.SetFloat("_RecoverSpeed", recoverSpeed*Time.fixedDeltaTime*0.1f);
         material.SetFloat("_ArtistElevationScale", artistScale);
         
         //called when depthCamera.targetTexture is set

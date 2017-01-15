@@ -1,9 +1,5 @@
 Shader "Snow/DeformationPostProcess" {
-
-	Properties
-	{
-		_RecoverSpeed("RecoverSpeed", Range(0, 0.5)) = 0
-	}
+	
 	SubShader 
 	{
 		Tags{ "RenderType" = "Opaque" }
@@ -26,7 +22,6 @@ Shader "Snow/DeformationPostProcess" {
 			sampler2D _CurrentDepthTexture;
 			sampler2D _CurrentAccumulationTexture;
 
-			float _DeltaTime;
 			float _RecoverSpeed;
 			float _ObjectMinHeight;
 			float _ArtistScale;
@@ -37,9 +32,9 @@ Shader "Snow/DeformationPostProcess" {
 				o.uv = v.texcoord;
 				return o;
 			}
+			
 
-			
-			
+
 			//this post process do two things:
 			//1. calculate new deformation if it has a deeper depths; refill snow deformation when it is nessceary.
 			//2. calculate elevation with snow height, object height and deformation height, then write elevation value for mesh rendering.
@@ -73,7 +68,8 @@ Shader "Snow/DeformationPostProcess" {
 				currentInfo.b = decodeFromColorSpace(currentInfo.b);
 
 				float4 updatedInfo = UpdateSnowInfo(float4(currentInfo.rgb,0), float4(deformationHeight, newElevation.y, newElevation.x,0));
-
+				
+				updatedInfo.r += _RecoverSpeed;// *_TimeDelta;
 				updatedInfo.g = encodeElevation(updatedInfo.g);
 				updatedInfo.b = encodeToColorSpace(updatedInfo.b);
 
